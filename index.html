@@ -3,14 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Free QR code generator with styled modules, gradients, logos and a live scan check. Export PNG or SVG, or turn your code into a 9:16 voxel-tree video.">
-<meta property="og:title" content="Bloom QR Studio">
-<meta property="og:description" content="Free QR code generator with styled modules, gradients, logos and a live scan check. Export PNG or SVG, or turn your code into a 9:16 voxel-tree video.">
-<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Bloom QR Studio</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Martian+Mono:wght@400;500&display=swap">
+<meta name="description" content="Free QR code generator with styled modules, gradients, logos and a live scan check. Export PNG or SVG, or turn your code into a 9:16 voxel-tree video. Works offline.">
+<meta name="theme-color" content="#ebeee8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1210" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Bloom QR">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta property="og:title" content="Bloom QR Studio">
+<meta property="og:description" content="Free QR code generator with styled modules, gradients, logos and a live scan check. Export PNG or SVG, or turn your code into a 9:16 voxel-tree video. Works offline.">
+<meta property="og:type" content="website">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+@font-face{font-family:'Bricolage Grotesque';font-style:normal;font-display:swap;font-weight:200 800;src:url(assets/fonts/bricolage-grotesque-wght.woff2) format('woff2')}
+@font-face{font-family:'Martian Mono';font-style:normal;font-display:swap;font-weight:100 800;src:url(assets/fonts/martian-mono-wght.woff2) format('woff2')}
+</style>
 <style>
 /* Layout: a maker's workbench. Tool drawer on the left, the code on a cutting mat
    whose grid and rulers line up with the QR modules; stacked mat-first on phones. */
@@ -63,6 +74,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .modes button { appearance: none; border: 0; background: transparent; color: var(--ink-2); font-weight: 650; font-size: 14px; padding: 8px 15px; border-radius: 10px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
 .modes button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
 .modes .tag { font: 500 9px var(--mono); letter-spacing: .06em; padding: 2px 5px; border-radius: 4px; background: var(--signal); color: var(--signal-ink); }
+.top-r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.btn.install { min-height: 40px; padding: 8px 13px; font-size: 13.5px; }
+.tip { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); transform: translateX(-50%); width: min(360px, calc(100vw - 32px)); background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); border-radius: 16px; padding: 16px 18px; box-shadow: var(--shadow-pop); z-index: 40; display: grid; gap: 10px; }
+.tip strong { font-size: 15px; }
+.tip ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; color: var(--ink-2); }
+.tip .btn { justify-self: start; }
 
 /* bench */
 .bench { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "stage" "tools"; align-items: start; }
@@ -228,10 +245,13 @@ textarea.input { resize: vertical; min-height: 88px; line-height: 1.4; }
       </svg>
       <span class="word">Bloom</span><span class="sub">QR studio</span>
     </a>
-    <nav class="modes" role="tablist" aria-label="Mode">
-      <button role="tab" id="tab-design" data-mode="design" aria-selected="true" aria-controls="stage">Design</button>
-      <button role="tab" id="tab-grow" data-mode="grow" aria-selected="false" aria-controls="stage">Grow <span class="tag">9:16</span></button>
-    </nav>
+    <div class="top-r">
+      <button class="btn install" id="bInstall" type="button" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M8 2.5v7m-3-3 3 3 3-3M3 12.5h10"/></svg>Install app</button>
+      <nav class="modes" role="tablist" aria-label="Mode">
+        <button role="tab" id="tab-design" data-mode="design" aria-selected="true" aria-controls="stage">Design</button>
+        <button role="tab" id="tab-grow" data-mode="grow" aria-selected="false" aria-controls="stage">Grow <span class="tag">9:16</span></button>
+      </nav>
+    </div>
   </header>
 
   <main class="bench">
@@ -446,12 +466,17 @@ textarea.input { resize: vertical; min-height: 88px; line-height: 1.4; }
   </main>
 
   <div class="peek" id="peek" hidden><button type="button" id="peekBtn" aria-label="Back to the preview"></button></div>
+  <div class="tip" id="iosTip" role="dialog" aria-labelledby="iosTipTitle" hidden>
+    <strong id="iosTipTitle">Add Bloom QR to your Home Screen</strong>
+    <ol><li>Tap <b>Share</b> in the browser toolbar.</li><li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li></ol>
+    <button class="btn" id="iosTipClose" type="button">Got it</button>
+  </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/build/mp4-muxer.js"></script>
+<script src="assets/js/qrcode.min.js"></script>
+<script src="assets/js/jsQR.min.js"></script>
+<script src="assets/js/mp4-muxer.min.js"></script>
 <script>
 /* Bloom QR engine: payloads, styled QR geometry, SVG/canvas renderers,
    scan check, and the voxel "Grow" animation. Plain script, one global. */
@@ -2325,6 +2350,34 @@ textarea.input { resize: vertical; min-height: 88px; line-height: 1.4; }
     new IntersectionObserver((en) => { matVisible = en[0].isIntersecting; updatePeek(); }, { threshold: 0.12 }).observe($('#mat'));
   }
   $('#peekBtn').addEventListener('click', () => $('#mat').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' }));
+
+  // ---------- installable app (hosted site only: needs a manifest) ----------
+  (function pwa() {
+    if (!document.querySelector('link[rel="manifest"]')) return;
+    const standalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const btn = $('#bInstall'), tip = $('#iosTip');
+    let deferred = null;
+    if (isIOS && !standalone()) btn.hidden = false;
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferred = e; if (!standalone()) btn.hidden = false; });
+    window.addEventListener('appinstalled', () => { deferred = null; btn.hidden = true; toast('Bloom QR is installed'); });
+    btn.addEventListener('click', async () => {
+      if (deferred) {
+        const ev = deferred; deferred = null;
+        ev.prompt();
+        try { const choice = await ev.userChoice; if (choice && choice.outcome === 'accepted') btn.hidden = true; } catch (e) { /* dismissed */ }
+      } else if (isIOS) tip.hidden = false;
+    });
+    $('#iosTipClose').addEventListener('click', () => { tip.hidden = true; });
+    const local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || local)) {
+      const firstInstall = !navigator.serviceWorker.controller;
+      navigator.serviceWorker.register('sw.js').then((reg) => {
+        const sw = reg.installing;
+        if (sw && firstInstall) sw.addEventListener('statechange', () => { if (sw.state === 'activated') toast('Bloom QR now works offline'); });
+      }).catch(() => { /* offline support is optional */ });
+    }
+  })();
 
   // ---------- boot ----------
   buildTiles();

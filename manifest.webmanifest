@@ -1,0 +1,87 @@
+{
+  "id": "./",
+  "name": "Bloom QR Studio",
+  "short_name": "Bloom QR",
+  "description": "Design styled QR codes with a live scan check, export PNG or SVG, and turn any code into a 9:16 voxel-tree video.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ebeee8",
+  "theme_color": "#ebeee8",
+  "lang": "en",
+  "categories": [
+    "utilities",
+    "design",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Design a QR code",
+      "short_name": "Design",
+      "url": "./#design",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Grow video",
+      "short_name": "Grow",
+      "description": "Turn a QR code into a 9:16 voxel-tree video",
+      "url": "./#grow",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screens/wide.webp",
+      "sizes": "1280x800",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Designing a styled QR code on the cutting mat"
+    },
+    {
+      "src": "assets/screens/narrow.webp",
+      "sizes": "824x1830",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Grow turns the code into a voxel tree video"
+    }
+  ]
+}
