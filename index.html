@@ -1,0 +1,2344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Free QR code generator with styled modules, gradients, logos and a live scan check. Export PNG or SVG, or turn your code into a 9:16 voxel-tree video.">
+<meta property="og:title" content="Bloom QR Studio">
+<meta property="og:description" content="Free QR code generator with styled modules, gradients, logos and a live scan check. Export PNG or SVG, or turn your code into a 9:16 voxel-tree video.">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Bloom QR Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Martian+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a maker's workbench. Tool drawer on the left, the code on a cutting mat
+   whose grid and rulers line up with the QR modules; stacked mat-first on phones. */
+:root {
+  --paper: #ebeee8; --sheet: #f8faf6; --field: #ffffff; --ink: #13201a; --ink-2: #4b5951; --ink-3: #748178;
+  --rule: #d3dbd4; --rule-2: #bec8c0;
+  --mat: #2b5a4a; --mat-2: #234c3e; --mat-glass: rgba(9, 28, 21, .45); --mat-ink: #d3e8dc; --mat-ink-2: rgba(211, 232, 220, .62);
+  --mat-line: rgba(214, 238, 226, .1); --mat-line-2: rgba(214, 238, 226, .22);
+  --signal: #f2c230; --signal-ink: #1d1a08; --laser: #ff5a47;
+  --ok: #18804d; --warn: #985f00; --bad: #bf3526;
+  --ok-mat: #7ee2ad; --warn-mat: #ffd36b; --bad-mat: #ff9a8a;
+  --check-a: #ffffff; --check-b: #e3e8e4;
+  --shadow-pop: 0 10px 30px rgba(8, 26, 18, .2);
+  --display: 'Bricolage Grotesque', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'Martian Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --r-m: 12px; --r-l: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0d1210; --sheet: #141b18; --field: #0f1513; --ink: #e4ece7; --ink-2: #a2b4aa; --ink-3: #75887d;
+    --rule: #25302b; --rule-2: #36443d;
+    --mat: #1e4135; --mat-2: #18362b; --mat-glass: rgba(4, 14, 10, .5);
+    --ok: #4cc386; --warn: #e2a94a; --bad: #f2735f;
+    --shadow-pop: 0 10px 30px rgba(0, 0, 0, .45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0d1210; --sheet: #141b18; --field: #0f1513; --ink: #e4ece7; --ink-2: #a2b4aa; --ink-3: #75887d;
+  --rule: #25302b; --rule-2: #36443d;
+  --mat: #1e4135; --mat-2: #18362b; --mat-glass: rgba(4, 14, 10, .5);
+  --ok: #4cc386; --warn: #e2a94a; --bad: #f2735f;
+  --shadow-pop: 0 10px 30px rgba(0, 0, 0, .45);
+  color-scheme: dark;
+}
+html, body { background: var(--paper); }
+body { color: var(--ink); font-family: var(--display); font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.app { max-width: 1440px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 48px; }
+
+/* header */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; padding-block: 14px 16px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
+.brand .mark { width: 30px; height: 30px; flex: none; }
+.brand .word { font-weight: 800; font-size: 25px; letter-spacing: -.035em; line-height: 1; }
+.brand .sub { font: 500 9.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); padding: 4px 7px; border: 1px solid var(--rule-2); border-radius: 6px; }
+.modes { display: inline-flex; padding: 3px; gap: 2px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 13px; }
+.modes button { appearance: none; border: 0; background: transparent; color: var(--ink-2); font-weight: 650; font-size: 14px; padding: 8px 15px; border-radius: 10px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
+.modes button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+.modes .tag { font: 500 9px var(--mono); letter-spacing: .06em; padding: 2px 5px; border-radius: 4px; background: var(--signal); color: var(--signal-ink); }
+
+/* bench */
+.bench { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "stage" "tools"; align-items: start; }
+@media (min-width: 1000px) {
+  .bench { grid-template-columns: minmax(350px, 420px) minmax(0, 1fr); grid-template-areas: "tools stage"; gap: 22px; }
+  .stage-wrap { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+}
+.stage-wrap { grid-area: stage; display: grid; gap: 12px; min-width: 0; }
+
+/* the mat */
+.mat { position: relative; background: var(--mat); border-radius: var(--r-l); overflow: hidden; isolation: isolate; height: min(122vw, 620px); }
+.mat.grow { height: min(176vw, 780px); }
+@media (min-width: 1000px) { .mat, .mat.grow { height: clamp(540px, calc(100dvh - 160px), 860px); } }
+.mat-grid { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.mat-grid .mn { stroke: var(--mat-line); }
+.mat-grid .mj { stroke: var(--mat-line-2); }
+.mat-grid .band { fill: var(--mat-2); }
+.mat-grid .tick { stroke: var(--mat-ink-2); }
+.mat-grid .qz { fill: var(--signal); }
+.mat-grid .diag { stroke: var(--signal); stroke-opacity: .16; }
+.mat-grid text { fill: var(--mat-ink-2); font: 500 8.5px var(--mono); }
+.card { position: absolute; line-height: 0; filter: drop-shadow(0 1px 1px rgba(6, 22, 16, .3)) drop-shadow(0 14px 22px rgba(6, 22, 16, .34)); }
+.card svg { width: 100%; height: 100%; display: block; }
+.card.checker { background: repeating-conic-gradient(var(--check-a) 0% 25%, var(--check-b) 0% 50%) 0 0 / 14px 14px; }
+.scan { position: absolute; top: 36px; right: 14px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 11px 6px 9px; border-radius: 999px; background: var(--mat-glass); color: var(--mat-ink); font: 500 10.5px var(--mono); letter-spacing: .03em; z-index: 2; max-width: calc(100% - 48px); }
+.scan .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn-mat); flex: none; }
+.scan[data-level="strong"] .dot, .scan[data-level="ok"] .dot { background: var(--ok-mat); }
+.scan[data-level="fail"] .dot { background: var(--bad-mat); }
+.scan[data-level="checking"] .dot { animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+.spec { position: absolute; left: 36px; bottom: 12px; right: 14px; font: 500 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--mat-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.laser { position: absolute; height: 2px; opacity: 0; pointer-events: none; z-index: 1; background: linear-gradient(90deg, transparent, var(--laser) 14%, var(--laser) 86%, transparent); box-shadow: 0 0 12px 2px rgba(255, 90, 71, .5); }
+.laser.run { animation: sweep .75s cubic-bezier(.45, 0, .2, 1) 1; }
+@keyframes sweep { 0% { transform: translateY(0); opacity: 0; } 12%, 86% { opacity: .95; } 100% { transform: translateY(var(--sweep, 300px)); opacity: 0; } }
+.empty { position: absolute; inset: 24px 24px 24px 48px; display: grid; place-content: center; text-align: center; gap: 6px; color: var(--mat-ink); }
+.empty strong { font-size: 20px; font-weight: 700; }
+.empty span { color: var(--mat-ink-2); font-size: 14px; max-width: 34ch; }
+
+/* grow film */
+.film { position: absolute; display: grid; gap: 10px; }
+.film canvas { display: block; width: 100%; border-radius: 14px; box-shadow: 0 1px 1px rgba(6, 22, 16, .3), 0 16px 30px rgba(6, 22, 16, .38); background: var(--mat-2); }
+.transport { display: flex; align-items: center; gap: 10px; color: var(--mat-ink); font: 500 10.5px var(--mono); font-variant-numeric: tabular-nums; }
+.round { appearance: none; width: 36px; height: 36px; flex: none; border-radius: 50%; border: 0; background: var(--mat-glass); color: var(--mat-ink); display: grid; place-items: center; cursor: pointer; }
+.round svg { width: 16px; height: 16px; }
+.transport input[type="range"] { flex: 1; min-width: 0; accent-color: var(--signal); }
+.transport output { min-width: 9ch; text-align: right; }
+
+/* export bars */
+.exportbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { appearance: none; border: 1px solid var(--rule-2); background: var(--sheet); color: var(--ink); font-weight: 650; font-size: 14px; padding: 9px 14px; border-radius: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; min-height: 42px; }
+.btn:hover { border-color: var(--ink-3); }
+.btn.primary { background: var(--signal); border-color: transparent; color: var(--signal-ink); }
+.btn.primary:hover { filter: brightness(1.04); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn svg { width: 16px; height: 16px; }
+.sizepick { display: inline-flex; align-items: center; gap: 0; border: 1px solid var(--rule-2); border-radius: 11px; background: var(--sheet); min-height: 42px; padding-left: 12px; font: 500 11px var(--mono); color: var(--ink-2); letter-spacing: .06em; }
+.sizepick select { appearance: none; border: 0; background: transparent; font: 600 14px var(--display); color: var(--ink); padding: 9px 26px 9px 8px; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%); background-position: right 13px top 52%, right 8px top 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+.xstatus { font-size: 13px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.xstatus progress { width: 120px; height: 6px; accent-color: var(--ink); }
+.spacer { flex: 1; }
+
+/* tools drawer */
+.tools { grid-area: tools; background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r-l); min-width: 0; }
+.sec { padding: 18px 18px 20px; display: grid; gap: 14px; min-width: 0; }
+.sec + .sec { border-top: 1px solid var(--rule); }
+.sec-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 22px; }
+.sec-h h2 { margin: 0; font: 500 10.5px var(--mono); letter-spacing: .15em; text-transform: uppercase; color: var(--ink-2); }
+.aside { font: 500 10.5px var(--mono); color: var(--ink-3); letter-spacing: .03em; font-variant-numeric: tabular-nums; text-align: right; }
+.lede { margin: 0; font-size: 14.5px; color: var(--ink-2); max-width: 60ch; }
+.lede strong { color: var(--ink); font-weight: 650; }
+.field { display: grid; gap: 7px; min-width: 0; }
+.lbl, .field > span { font-size: 13px; font-weight: 650; color: var(--ink); }
+.input { width: 100%; min-width: 0; background: var(--field); border: 1px solid var(--rule-2); border-radius: 10px; padding: 10px 12px; font-size: 15px; color: var(--ink); }
+textarea.input { resize: vertical; min-height: 88px; line-height: 1.4; }
+.input:focus-visible, select:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.hint { margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.45; max-width: 62ch; }
+.hint.warn { color: var(--warn); }
+.hint.bad { color: var(--bad); }
+.row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+@media (max-width: 420px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
+.cgroup { display: grid; gap: 12px; min-width: 0; }
+
+/* segmented radios */
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.seg label { cursor: pointer; padding: 7px 12px; border-radius: 10px; border: 1px solid var(--rule-2); font-size: 13.5px; font-weight: 600; color: var(--ink-2); background: var(--field); user-select: none; line-height: 1.3; }
+.seg label:hover { color: var(--ink); border-color: var(--ink-3); }
+.seg input:checked + label { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.seg input:focus-visible + label { outline: 2px solid var(--ink); outline-offset: 2px; }
+.seg label small { font: 500 10px var(--mono); opacity: .75; margin-left: 4px; }
+
+/* tiles */
+.tiles { display: grid; gap: 8px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tiles.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.tile { appearance: none; border: 1px solid var(--rule); background: var(--field); border-radius: 12px; padding: 6px 6px 6px; cursor: pointer; display: grid; gap: 5px; justify-items: stretch; color: var(--ink-2); font-size: 11.5px; font-weight: 600; min-width: 0; text-align: center; }
+.tile svg { width: 100%; height: auto; aspect-ratio: 1; display: block; border-radius: 7px; }
+.tile:hover { border-color: var(--ink-3); color: var(--ink); }
+.tile[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); color: var(--ink); }
+.tile:focus-visible, .icon-btn:focus-visible, .btn:focus-visible, .modes button:focus-visible, .round:focus-visible, .swatch-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.tile .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.presets .tile { font-size: 12px; }
+
+/* colors */
+.colors { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.color { display: flex; align-items: center; gap: 8px; border: 1px solid var(--rule-2); border-radius: 10px; padding: 5px 8px 5px 5px; background: var(--field); min-width: 0; }
+.color input[type="color"] { width: 32px; height: 32px; flex: none; border: 0; padding: 0; border-radius: 7px; background: none; cursor: pointer; }
+.color input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.color input[type="color"]::-webkit-color-swatch { border: 1px solid var(--rule-2); border-radius: 7px; }
+.color input[type="color"]::-moz-color-swatch { border: 1px solid var(--rule-2); border-radius: 7px; }
+.color .hex { border: 0; background: transparent; font: 500 12.5px var(--mono); color: var(--ink); width: 100%; min-width: 0; text-transform: uppercase; padding: 4px 2px; }
+.color .hex:focus-visible { outline: 2px solid var(--ink); border-radius: 4px; }
+.range { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.range input { width: 100%; accent-color: var(--ink); }
+.range output { font: 500 11.5px var(--mono); color: var(--ink-2); min-width: 6ch; text-align: right; font-variant-numeric: tabular-nums; }
+.check { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; width: fit-content; }
+.check input { width: 18px; height: 18px; margin: 0; accent-color: var(--ink); flex: none; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font: 500 10.5px var(--mono); padding: 4px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.chip.ok { color: var(--ok); } .chip.warn { color: var(--warn); } .chip.bad { color: var(--bad); }
+.split { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.linkbtn { appearance: none; border: 0; background: none; padding: 0; color: var(--ink-2); font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.linkbtn:hover { color: var(--ink); }
+
+/* icons + drop zone */
+.icons { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 420px) { .icons { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.icon-btn { appearance: none; aspect-ratio: 1; border: 1px solid var(--rule); background: var(--field); border-radius: 10px; display: grid; place-items: center; cursor: pointer; color: var(--ink-2); padding: 0; min-width: 0; }
+.icon-btn svg { width: 56%; height: 56%; }
+.icon-btn[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); color: var(--ink); }
+.drop { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; border: 1.5px dashed var(--rule-2); border-radius: 12px; padding: 12px 14px; color: var(--ink-2); cursor: pointer; background: var(--field); font-size: 13.5px; }
+.drop.over { border-color: var(--ink); color: var(--ink); }
+.drop .thumb { width: 44px; height: 44px; border-radius: 9px; border: 1px solid var(--rule); display: grid; place-items: center; overflow: hidden; background: repeating-conic-gradient(var(--check-a) 0% 25%, var(--check-b) 0% 50%) 0 0 / 10px 10px; }
+.drop .thumb img { max-width: 100%; max-height: 100%; }
+.drop strong { color: var(--ink); display: block; font-weight: 650; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* grow pickers */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.swatch-btn { appearance: none; border: 1px solid var(--rule); background: var(--field); border-radius: 12px; padding: 8px 10px; display: flex; align-items: center; gap: 9px; cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--ink-2); min-width: 0; }
+.swatch-btn[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); color: var(--ink); }
+.swatch-btn i { width: 22px; height: 22px; border-radius: 6px; flex: none; border: 1px solid rgba(0, 0, 0, .12); }
+.raw summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.raw pre { margin: 8px 0 0; padding: 10px 12px; background: var(--field); border: 1px solid var(--rule); border-radius: 10px; font: 400 11.5px/1.5 var(--mono); white-space: pre-wrap; word-break: break-all; max-height: 180px; overflow: auto; }
+.fineprint { font-size: 12px; color: var(--ink-3); margin: 0; }
+
+/* phone peek + toast */
+.peek { position: fixed; right: calc(env(safe-area-inset-right, 0px) + 14px); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); z-index: 20; }
+.peek button { width: 80px; height: 80px; border-radius: 16px; border: 1px solid var(--rule); background: var(--sheet); padding: 6px; box-shadow: var(--shadow-pop); cursor: pointer; display: grid; place-items: center; line-height: 0; }
+.peek svg { width: 100%; height: 100%; }
+.toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); transform: translate(-50%, 16px); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 12px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 30; max-width: calc(100vw - 32px); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { .laser.run { animation: none; } .toast { transition: none; } .scan[data-level="checking"] .dot { animation: none; } }
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="brand" href="#design" aria-label="Bloom QR Studio">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path fill="var(--ink)" d="M11 2h10a9 9 0 0 1 9 9v17a2 2 0 0 1-2 2H11a9 9 0 0 1-9-9V11a9 9 0 0 1 9-9zm1 6a4 4 0 0 0-4 4v8a4 4 0 0 0 4 4h12V12a4 4 0 0 0-4-4z"/>
+        <path fill="var(--signal)" d="M14 11h4a3 3 0 0 1 3 3v6.2a.8.8 0 0 1-.8.8H14a3 3 0 0 1-3-3v-4a3 3 0 0 1 3-3z"/>
+      </svg>
+      <span class="word">Bloom</span><span class="sub">QR studio</span>
+    </a>
+    <nav class="modes" role="tablist" aria-label="Mode">
+      <button role="tab" id="tab-design" data-mode="design" aria-selected="true" aria-controls="stage">Design</button>
+      <button role="tab" id="tab-grow" data-mode="grow" aria-selected="false" aria-controls="stage">Grow <span class="tag">9:16</span></button>
+    </nav>
+  </header>
+
+  <main class="bench">
+    <section class="stage-wrap" id="stage" aria-label="Preview">
+      <div class="mat" id="mat">
+        <svg class="mat-grid" id="matGrid" aria-hidden="true"></svg>
+        <div class="scan" id="scan" data-level="checking" role="status" aria-live="polite"><span class="dot"></span><span id="scanText">Checking…</span></div>
+        <div class="card" id="card"></div>
+        <div class="laser" id="laser" aria-hidden="true"></div>
+        <div class="empty" id="empty" hidden><strong id="emptyTitle">Nothing to encode yet</strong><span id="emptyText">Add a link, text, Wi-Fi network or contact on the left.</span></div>
+        <div class="film" id="film" hidden>
+          <canvas id="growCv" width="360" height="640" aria-label="Grow animation preview"></canvas>
+          <div class="transport">
+            <button class="round" id="bPlay" type="button" aria-label="Pause">
+              <svg id="icPause" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M4 2.5h2.6v11H4zM9.4 2.5H12v11H9.4z"/></svg>
+              <svg id="icPlay" viewBox="0 0 16 16" aria-hidden="true" hidden><path fill="currentColor" d="M4.5 2.4 13 8l-8.5 5.6z"/></svg>
+            </button>
+            <label class="visually-hidden" for="scrub">Timeline</label>
+            <input type="range" id="scrub" min="0" max="14" step="0.01" value="0">
+            <output id="tOut" for="scrub">0.0 / 14.0 s</output>
+          </div>
+        </div>
+        <div class="spec" id="spec"></div>
+      </div>
+      <div class="exportbar" id="xDesign">
+        <label class="sizepick" for="f-size">PNG<select id="f-size" data-bind="pngSize" data-num>
+          <option value="512">512 px</option><option value="1024">1024 px</option><option value="2048">2048 px</option><option value="4096">4096 px</option>
+        </select></label>
+        <button class="btn primary" id="bPng" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M8 2.5v8m-3.5-3.5L8 10.5 11.5 7M3 13.5h10"/></svg>Save PNG</button>
+        <button class="btn" id="bSvg" type="button">Save SVG</button>
+        <button class="btn" id="bCopy" type="button">Copy SVG</button>
+      </div>
+      <div class="exportbar" id="xGrow" hidden>
+        <button class="btn primary" id="bVideo" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M2.5 4.5h7.5v7H2.5zM10 7l3.5-2v6L10 9"/></svg>Render MP4</button>
+        <button class="btn" id="bSaveVideo" type="button" hidden>Save MP4</button>
+        <button class="btn" id="bCancel" type="button" hidden>Cancel</button>
+        <button class="btn" id="bFrame" type="button">Save frame</button>
+        <span class="xstatus" id="vStatus" role="status" aria-live="polite"><progress id="vProg" max="1" value="0" hidden></progress><span id="vText"></span></span>
+      </div>
+    </section>
+
+    <section class="tools" id="tools" aria-label="Settings">
+      <div class="sec" id="secContent">
+        <div class="sec-h"><h2>Content</h2><span class="aside" id="bytesInfo"></span></div>
+        <div class="seg" role="radiogroup" aria-label="Content type">
+          <input type="radio" name="ctype" id="ct-url" value="url" data-bind="content.type"><label for="ct-url">Link</label>
+          <input type="radio" name="ctype" id="ct-text" value="text" data-bind="content.type"><label for="ct-text">Text</label>
+          <input type="radio" name="ctype" id="ct-wifi" value="wifi" data-bind="content.type"><label for="ct-wifi">Wi-Fi</label>
+          <input type="radio" name="ctype" id="ct-contact" value="contact" data-bind="content.type"><label for="ct-contact">Contact</label>
+          <input type="radio" name="ctype" id="ct-email" value="email" data-bind="content.type"><label for="ct-email">Email</label>
+          <input type="radio" name="ctype" id="ct-phone" value="phone" data-bind="content.type"><label for="ct-phone">Phone</label>
+        </div>
+        <div class="cgroup" data-ctype="url">
+          <label class="field" for="f-url"><span>Link</span><input class="input" id="f-url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://example.com" data-bind="content.url"></label>
+          <p class="hint" id="urlHint">Example link. Replace it with yours; https:// is added when it's missing.</p>
+        </div>
+        <div class="cgroup" data-ctype="text" hidden>
+          <label class="field" for="f-text"><span>Text</span><textarea class="input" id="f-text" dir="auto" rows="4" placeholder="Any text, in any language" data-bind="content.text"></textarea></label>
+        </div>
+        <div class="cgroup" data-ctype="wifi" hidden>
+          <label class="field" for="f-ssid"><span>Network name</span><input class="input" id="f-ssid" autocomplete="off" spellcheck="false" data-bind="content.wifi.ssid"></label>
+          <label class="field" for="f-pass"><span>Password</span><input class="input" id="f-pass" autocomplete="off" spellcheck="false" data-bind="content.wifi.pass"></label>
+          <div class="field"><span class="lbl" id="l-enc">Security</span>
+            <div class="seg" role="radiogroup" aria-labelledby="l-enc">
+              <input type="radio" name="wenc" id="we-wpa" value="WPA" data-bind="content.wifi.enc"><label for="we-wpa">WPA / WPA2 / WPA3</label>
+              <input type="radio" name="wenc" id="we-wep" value="WEP" data-bind="content.wifi.enc"><label for="we-wep">WEP</label>
+              <input type="radio" name="wenc" id="we-none" value="nopass" data-bind="content.wifi.enc"><label for="we-none">Open</label>
+            </div>
+          </div>
+          <label class="check" for="f-hidden"><input type="checkbox" id="f-hidden" data-bind="content.wifi.hidden">Hidden network</label>
+          <p class="hint">Phones offer to join the network when they scan it. The password sits inside the code, so anyone who scans it can read it. It isn't saved on this device.</p>
+        </div>
+        <div class="cgroup" data-ctype="contact" hidden>
+          <div class="row2">
+            <label class="field" for="f-first"><span>First name</span><input class="input" id="f-first" autocomplete="off" data-bind="content.contact.first"></label>
+            <label class="field" for="f-last"><span>Last name</span><input class="input" id="f-last" autocomplete="off" data-bind="content.contact.last"></label>
+          </div>
+          <div class="row2">
+            <label class="field" for="f-cphone"><span>Phone</span><input class="input" id="f-cphone" type="tel" autocomplete="off" data-bind="content.contact.phone"></label>
+            <label class="field" for="f-cemail"><span>Email</span><input class="input" id="f-cemail" type="email" autocomplete="off" data-bind="content.contact.email"></label>
+          </div>
+          <div class="row2">
+            <label class="field" for="f-org"><span>Company</span><input class="input" id="f-org" autocomplete="off" data-bind="content.contact.org"></label>
+            <label class="field" for="f-title"><span>Job title</span><input class="input" id="f-title" autocomplete="off" data-bind="content.contact.title"></label>
+          </div>
+          <label class="field" for="f-curl"><span>Website</span><input class="input" id="f-curl" type="url" autocomplete="off" spellcheck="false" data-bind="content.contact.url"></label>
+          <p class="hint">Saved as a vCard. Phones offer to add it to contacts.</p>
+        </div>
+        <div class="cgroup" data-ctype="email" hidden>
+          <label class="field" for="f-to"><span>To</span><input class="input" id="f-to" type="email" autocomplete="off" spellcheck="false" data-bind="content.email.to"></label>
+          <label class="field" for="f-subj"><span>Subject</span><input class="input" id="f-subj" dir="auto" autocomplete="off" data-bind="content.email.subject"></label>
+          <label class="field" for="f-body"><span>Message</span><textarea class="input" id="f-body" dir="auto" rows="3" data-bind="content.email.body"></textarea></label>
+        </div>
+        <div class="cgroup" data-ctype="phone" hidden>
+          <label class="field" for="f-num"><span>Phone number</span><input class="input" id="f-num" type="tel" autocomplete="off" placeholder="+39 055 123 4567" data-bind="content.phone.number"></label>
+          <div class="seg" role="radiogroup" aria-label="When scanned">
+            <input type="radio" name="pmode" id="pm-call" value="call" data-bind="content.phone.mode"><label for="pm-call">Call</label>
+            <input type="radio" name="pmode" id="pm-sms" value="sms" data-bind="content.phone.mode"><label for="pm-sms">Text message</label>
+          </div>
+          <label class="field" for="f-sms" id="smsField"><span>Message</span><textarea class="input" id="f-sms" dir="auto" rows="2" data-bind="content.phone.message"></textarea></label>
+        </div>
+        <details class="raw"><summary>Encoded data</summary><pre id="rawOut"></pre></details>
+      </div>
+
+      <div class="sec" data-for="design">
+        <div class="sec-h"><h2>Presets</h2><span class="aside" id="presetName"></span></div>
+        <div class="tiles presets" id="presetTiles" role="group" aria-label="Presets"></div>
+      </div>
+
+      <div class="sec" data-for="design">
+        <div class="sec-h"><h2>Pattern</h2></div>
+        <div class="field"><span class="lbl" id="l-mod">Modules</span><div class="tiles" id="moduleTiles" role="group" aria-labelledby="l-mod"></div></div>
+        <div class="field"><span class="lbl" id="l-frame">Eye frame</span><div class="tiles five" id="frameTiles" role="group" aria-labelledby="l-frame"></div></div>
+        <div class="field"><span class="lbl" id="l-ball">Eye center</span><div class="tiles five" id="ballTiles" role="group" aria-labelledby="l-ball"></div></div>
+      </div>
+
+      <div class="sec" data-for="design">
+        <div class="sec-h"><h2>Color</h2><span class="chip ok" id="contrastChip">Contrast</span></div>
+        <div class="seg" role="radiogroup" aria-label="Fill">
+          <input type="radio" name="fmode" id="fm-solid" value="solid" data-bind="fill.mode"><label for="fm-solid">Solid</label>
+          <input type="radio" name="fmode" id="fm-linear" value="linear" data-bind="fill.mode"><label for="fm-linear">Linear gradient</label>
+          <input type="radio" name="fmode" id="fm-radial" value="radial" data-bind="fill.mode"><label for="fm-radial">Radial</label>
+        </div>
+        <div class="colors">
+          <div class="field"><span class="lbl" id="l-c1">Color</span><div class="color"><input type="color" id="f-c1" data-bind="fill.c1" aria-labelledby="l-c1"><input class="hex" id="f-c1x" data-hex="f-c1" maxlength="7" spellcheck="false" aria-labelledby="l-c1"></div></div>
+          <div class="field" id="c2Field"><span class="lbl" id="l-c2">Second color</span><div class="color"><input type="color" id="f-c2" data-bind="fill.c2" aria-labelledby="l-c2"><input class="hex" id="f-c2x" data-hex="f-c2" maxlength="7" spellcheck="false" aria-labelledby="l-c2"></div></div>
+        </div>
+        <div class="range" id="angleRow"><label class="lbl" for="f-angle">Angle</label><input type="range" id="f-angle" min="0" max="360" step="5" data-bind="fill.angle" data-num><output id="o-angle" for="f-angle"></output></div>
+        <label class="check" for="f-eyecustom"><input type="checkbox" id="f-eyecustom" data-bind="eyes.custom">Separate eye colors</label>
+        <div class="colors" id="eyeColors" hidden>
+          <div class="field"><span class="lbl" id="l-ef">Eye frame</span><div class="color"><input type="color" id="f-ef" data-bind="eyes.frame" aria-labelledby="l-ef"><input class="hex" id="f-efx" data-hex="f-ef" maxlength="7" spellcheck="false" aria-labelledby="l-ef"></div></div>
+          <div class="field"><span class="lbl" id="l-eb">Eye center</span><div class="color"><input type="color" id="f-eb" data-bind="eyes.ball" aria-labelledby="l-eb"><input class="hex" id="f-ebx" data-hex="f-eb" maxlength="7" spellcheck="false" aria-labelledby="l-eb"></div></div>
+        </div>
+        <div class="colors">
+          <div class="field"><span class="lbl" id="l-bg">Background</span><div class="color"><input type="color" id="f-bg" data-bind="bg.color" aria-labelledby="l-bg"><input class="hex" id="f-bgx" data-hex="f-bg" maxlength="7" spellcheck="false" aria-labelledby="l-bg"></div></div>
+          <div class="field" style="align-content:end"><label class="check" for="f-transparent"><input type="checkbox" id="f-transparent" data-bind="bg.transparent">Transparent</label></div>
+        </div>
+        <div class="split"><p class="hint" id="contrastHint"></p><button class="linkbtn" id="bSwap" type="button">Swap colors</button></div>
+      </div>
+
+      <div class="sec" data-for="design">
+        <div class="sec-h"><h2>Center</h2><span class="aside" id="centerInfo"></span></div>
+        <div class="seg" role="radiogroup" aria-label="Center">
+          <input type="radio" name="ctr" id="cr-none" value="none" data-bind="center.type"><label for="cr-none">None</label>
+          <input type="radio" name="ctr" id="cr-text" value="text" data-bind="center.type"><label for="cr-text">Initials</label>
+          <input type="radio" name="ctr" id="cr-icon" value="icon" data-bind="center.type"><label for="cr-icon">Icon</label>
+          <input type="radio" name="ctr" id="cr-image" value="image" data-bind="center.type"><label for="cr-image">Logo</label>
+        </div>
+        <div class="cgroup" data-center="text" hidden>
+          <label class="field" for="f-initials"><span>Initials</span><input class="input" id="f-initials" maxlength="3" autocomplete="off" placeholder="AB" data-bind="center.text"></label>
+        </div>
+        <div class="cgroup" data-center="icon" hidden><div class="icons" id="iconTiles" role="group" aria-label="Icon"></div></div>
+        <div class="cgroup" data-center="image" hidden>
+          <label class="drop" id="drop" for="f-logo">
+            <span class="thumb" id="logoThumb" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 16V5m-4 4 4-4 4 4M5 19h14"/></svg></span>
+            <span><strong id="logoTitle">Choose a logo</strong><span id="logoSub">PNG, JPG or SVG. Drop it here or click.</span></span>
+          </label>
+          <input type="file" id="f-logo" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" class="visually-hidden">
+          <label class="check" for="f-plate"><input type="checkbox" id="f-plate" data-bind="center.plate">Plate behind the logo</label>
+        </div>
+        <div class="field" id="shapeRow" hidden><span class="lbl" id="l-shape">Badge shape</span>
+          <div class="seg" role="radiogroup" aria-labelledby="l-shape">
+            <input type="radio" name="cshape" id="cs-circle" value="circle" data-bind="center.shape"><label for="cs-circle">Circle</label>
+            <input type="radio" name="cshape" id="cs-square" value="square" data-bind="center.shape"><label for="cs-square">Rounded square</label>
+          </div>
+        </div>
+        <div class="range" id="sizeRow" hidden><label class="lbl" for="f-csize">Size</label><input type="range" id="f-csize" min="0.16" max="0.3" step="0.01" data-bind="center.size" data-num><output id="o-csize" for="f-csize"></output></div>
+        <p class="hint" id="centerHint" hidden></p>
+      </div>
+
+      <div class="sec" data-for="design">
+        <div class="sec-h"><h2>Frame</h2></div>
+        <div class="seg" role="radiogroup" aria-label="Label">
+          <input type="radio" name="lab" id="lb-none" value="none" data-bind="label.style"><label for="lb-none">No label</label>
+          <input type="radio" name="lab" id="lb-text" value="text" data-bind="label.style"><label for="lb-text">Text</label>
+          <input type="radio" name="lab" id="lb-pill" value="pill" data-bind="label.style"><label for="lb-pill">Pill</label>
+        </div>
+        <label class="field" for="f-label" id="labelField"><span>Label text</span><input class="input" id="f-label" maxlength="28" dir="auto" autocomplete="off" data-bind="label.text"></label>
+        <div class="range"><label class="lbl" for="f-margin">Quiet zone</label><input type="range" id="f-margin" min="0" max="8" step="1" data-bind="margin" data-num><output id="o-margin" for="f-margin"></output></div>
+        <p class="hint warn" id="qzHint" hidden>Below 2 modules many scanners can't find the code. 4 is the standard.</p>
+        <div class="range"><label class="lbl" for="f-radius">Corners</label><input type="range" id="f-radius" min="0" max="6" step="0.5" data-bind="bg.radius" data-num><output id="o-radius" for="f-radius"></output></div>
+      </div>
+
+      <div class="sec" data-for="design">
+        <div class="sec-h"><h2>Error correction</h2><span class="aside" id="eclNow"></span></div>
+        <div class="seg" role="radiogroup" aria-label="Error correction">
+          <input type="radio" name="ecl" id="ec-auto" value="auto" data-bind="ecl"><label for="ec-auto">Auto</label>
+          <input type="radio" name="ecl" id="ec-L" value="L" data-bind="ecl"><label for="ec-L">L<small>7%</small></label>
+          <input type="radio" name="ecl" id="ec-M" value="M" data-bind="ecl"><label for="ec-M">M<small>15%</small></label>
+          <input type="radio" name="ecl" id="ec-Q" value="Q" data-bind="ecl"><label for="ec-Q">Q<small>25%</small></label>
+          <input type="radio" name="ecl" id="ec-H" value="H" data-bind="ecl"><label for="ec-H">H<small>30%</small></label>
+        </div>
+        <p class="hint">The share of the code that can be covered or damaged and still scan. Higher levels need more modules, so the code gets denser.</p>
+        <p class="fineprint">The scan check reads your design three times in this browser (crisp, soft focus and small). Print a test copy before a big run.</p>
+      </div>
+
+      <div class="sec" data-for="grow" hidden>
+        <div class="sec-h"><h2>Grow</h2><span class="aside">9:16 · 1080×1920 · 60 fps</span></div>
+        <p class="lede">The pixels of your code lift off, grow into a voxel tree on a small garden, then fold back into the code. The clip <strong>opens and ends on a scannable QR</strong>, so it works as one in a story or reel.</p>
+        <p class="hint">Grow uses square pixels in your colors. Center badges and labels stay in the Design export.</p>
+      </div>
+      <div class="sec" data-for="grow" hidden>
+        <div class="sec-h"><h2>Season</h2></div>
+        <div class="swatches" id="seasonPick" role="group" aria-label="Season"></div>
+      </div>
+      <div class="sec" data-for="grow" hidden>
+        <div class="sec-h"><h2>Backdrop</h2></div>
+        <div class="swatches" id="backdropPick" role="group" aria-label="Backdrop"></div>
+        <p class="hint">On Night the code turns light on dark. Most phone cameras read that; a few older scanner apps don't.</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="peek" id="peek" hidden><button type="button" id="peekBtn" aria-label="Back to the preview"></button></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/build/mp4-muxer.js"></script>
+<script>
+/* Bloom QR engine: payloads, styled QR geometry, SVG/canvas renderers,
+   scan check, and the voxel "Grow" animation. Plain script, one global. */
+(function (root) {
+  'use strict';
+
+  // ---------- small math + color helpers ----------
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  const easeIO = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const f3 = (v) => { const r = Math.round(v * 1000) / 1000; return r === 0 ? '0' : String(r); };
+
+  function hexToRgb(hex) {
+    let h = String(hex || '').trim().replace(/^#/, '');
+    if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+    if (!/^[0-9a-f]{6}$/i.test(h)) return [0, 0, 0];
+    const n = parseInt(h, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function rgbToHex(c) {
+    return '#' + c.map((v) => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('');
+  }
+  const mixRgb = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+  function relLum(c) {
+    const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+  }
+  function contrast(a, b) {
+    const la = relLum(a), lb = relLum(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  }
+  const isHex = (s) => /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(s || '').trim());
+
+  // ---------- payloads ----------
+  function wifiEsc(s) { return String(s).replace(/([\\;,:"])/g, '\\$1'); }
+  function vcEsc(s) { return String(s).replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/([,;])/g, '\\$1'); }
+
+  function buildPayload(c) {
+    switch (c.type) {
+      case 'url': {
+        let u = (c.url || '').trim();
+        if (!u) return '';
+        if (!/^[a-z][a-z0-9+.-]*:/i.test(u) && /^[\w-]+(\.[\w-]+)+(:\d+)?([/?#].*)?$/i.test(u)) u = 'https://' + u;
+        return u;
+      }
+      case 'text': return c.text || '';
+      case 'wifi': {
+        const w = c.wifi || {};
+        if (!w.ssid) return '';
+        const enc = w.enc || 'WPA';
+        let s = 'WIFI:T:' + enc + ';S:' + wifiEsc(w.ssid) + ';';
+        if (enc !== 'nopass') s += 'P:' + wifiEsc(w.pass || '') + ';';
+        if (w.hidden) s += 'H:true;';
+        return s + ';';
+      }
+      case 'contact': {
+        const v = c.contact || {};
+        const first = (v.first || '').trim(), last = (v.last || '').trim();
+        if (!first && !last && !v.phone && !v.email) return '';
+        const L = ['BEGIN:VCARD', 'VERSION:3.0', 'N:' + vcEsc(last) + ';' + vcEsc(first) + ';;;', 'FN:' + vcEsc((first + ' ' + last).trim())];
+        if (v.org) L.push('ORG:' + vcEsc(v.org));
+        if (v.title) L.push('TITLE:' + vcEsc(v.title));
+        if (v.phone) L.push('TEL;TYPE=CELL:' + v.phone.replace(/[^\d+]/g, ''));
+        if (v.email) L.push('EMAIL:' + v.email.trim());
+        if (v.url) L.push('URL:' + v.url.trim());
+        L.push('END:VCARD');
+        return L.join('\n');
+      }
+      case 'email': {
+        const e = c.email || {};
+        if (!e.to) return '';
+        const q = [];
+        if (e.subject) q.push('subject=' + encodeURIComponent(e.subject));
+        if (e.body) q.push('body=' + encodeURIComponent(e.body));
+        return 'mailto:' + e.to.trim() + (q.length ? '?' + q.join('&') : '');
+      }
+      case 'phone': {
+        const p = c.phone || {};
+        const num = (p.number || '').replace(/[^\d+]/g, '');
+        if (!num) return '';
+        return p.mode === 'sms' ? 'SMSTO:' + num + ':' + (p.message || '') : 'tel:' + num;
+      }
+    }
+    return '';
+  }
+
+  // ---------- QR matrix ----------
+  const utf8 = (s) => Array.from(new TextEncoder().encode(s));
+  function makeMatrix(text, ecl) {
+    const Q = root.qrcode;
+    if (!Q) throw new Error('encoder-missing');
+    Q.stringToBytes = utf8;
+    const order = ecl === 'auto' ? null : [ecl];
+    const tryLevel = (lv) => {
+      const qr = Q(0, lv);
+      qr.addData(text, 'Byte');
+      qr.make();
+      const n = qr.getModuleCount();
+      const m = new Uint8Array(n * n);
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) m[r * n + c] = qr.isDark(r, c) ? 1 : 0;
+      return { n, m, version: (n - 17) / 4, ecl: lv, bytes: utf8(text) };
+    };
+    const levels = order || ['H', 'Q', 'M', 'L'];
+    let lastErr;
+    for (const lv of levels) {
+      try { return tryLevel(lv); } catch (e) { lastErr = e; }
+    }
+    const err = new Error('overflow');
+    err.cause = lastErr;
+    throw err;
+  }
+
+  // ---------- path builders (module units, y down) ----------
+  function rrect(x, y, w, h, tl, tr, br, bl) {
+    let d = 'M' + f3(x + tl) + ' ' + f3(y) + 'H' + f3(x + w - tr);
+    if (tr) d += 'A' + f3(tr) + ' ' + f3(tr) + ' 0 0 1 ' + f3(x + w) + ' ' + f3(y + tr);
+    d += 'V' + f3(y + h - br);
+    if (br) d += 'A' + f3(br) + ' ' + f3(br) + ' 0 0 1 ' + f3(x + w - br) + ' ' + f3(y + h);
+    d += 'H' + f3(x + bl);
+    if (bl) d += 'A' + f3(bl) + ' ' + f3(bl) + ' 0 0 1 ' + f3(x) + ' ' + f3(y + h - bl);
+    d += 'V' + f3(y + tl);
+    if (tl) d += 'A' + f3(tl) + ' ' + f3(tl) + ' 0 0 1 ' + f3(x + tl) + ' ' + f3(y);
+    return d + 'Z';
+  }
+  function rrectHole(x, y, w, h, tl, tr, br, bl) {
+    let d = 'M' + f3(x + tl) + ' ' + f3(y);
+    if (tl) d += 'A' + f3(tl) + ' ' + f3(tl) + ' 0 0 0 ' + f3(x) + ' ' + f3(y + tl);
+    d += 'V' + f3(y + h - bl);
+    if (bl) d += 'A' + f3(bl) + ' ' + f3(bl) + ' 0 0 0 ' + f3(x + bl) + ' ' + f3(y + h);
+    d += 'H' + f3(x + w - br);
+    if (br) d += 'A' + f3(br) + ' ' + f3(br) + ' 0 0 0 ' + f3(x + w) + ' ' + f3(y + h - br);
+    d += 'V' + f3(y + tr);
+    if (tr) d += 'A' + f3(tr) + ' ' + f3(tr) + ' 0 0 0 ' + f3(x + w - tr) + ' ' + f3(y);
+    return d + 'Z';
+  }
+  function circle(cx, cy, r, hole) {
+    const s = hole ? 0 : 1;
+    return 'M' + f3(cx - r) + ' ' + f3(cy) + 'A' + f3(r) + ' ' + f3(r) + ' 0 1 ' + s + ' ' + f3(cx + r) + ' ' + f3(cy) +
+      'A' + f3(r) + ' ' + f3(r) + ' 0 1 ' + s + ' ' + f3(cx - r) + ' ' + f3(cy) + 'Z';
+  }
+  const hash2 = (r, c) => { const s = Math.sin(r * 12.9898 + c * 78.233) * 43758.5453; return s - Math.floor(s); };
+
+  const MODULE_STYLES = ['square', 'liquid', 'dots', 'soft', 'leaf', 'bars', 'columns', 'mosaic'];
+
+  function modulePath(style, n, q, ON, FREE) {
+    const out = [];
+    if (style === 'square') {
+      for (let r = 0; r < n; r++) {
+        let c = 0;
+        while (c < n) {
+          if (ON(r, c)) {
+            const s = c;
+            while (c < n && ON(r, c)) c++;
+            out.push('M' + (s + q) + ' ' + (r + q) + 'h' + (c - s) + 'v1h' + (s - c) + 'z');
+          } else c++;
+        }
+      }
+      return out.join('');
+    }
+    if (style === 'bars' || style === 'columns') {
+      const g = 0.1, e = 0.04, rad = 0.5 - g;
+      for (let a = 0; a < n; a++) {
+        let b = 0;
+        while (b < n) {
+          const isOn = style === 'bars' ? ON(a, b) : ON(b, a);
+          if (isOn) {
+            const s = b;
+            while (b < n && (style === 'bars' ? ON(a, b) : ON(b, a))) b++;
+            const len = b - s;
+            if (style === 'bars') out.push(rrect(s + q + e, a + q + g, len - 2 * e, 1 - 2 * g, rad, rad, rad, rad));
+            else out.push(rrect(a + q + g, s + q + e, 1 - 2 * g, len - 2 * e, rad, rad, rad, rad));
+          } else b++;
+        }
+      }
+      return out.join('');
+    }
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        const x = c + q, y = r + q;
+        if (ON(r, c)) {
+          if (style === 'dots') out.push(circle(x + 0.5, y + 0.5, 0.45));
+          else if (style === 'soft') out.push(rrect(x + 0.06, y + 0.06, 0.88, 0.88, 0.27, 0.27, 0.27, 0.27));
+          else if (style === 'mosaic') {
+            const s = 0.74 + 0.24 * hash2(r, c), o = (1 - s) / 2, k = s * 0.2;
+            out.push(rrect(x + o, y + o, s, s, k, k, k, k));
+          } else {
+            const t = ON(r - 1, c), b = ON(r + 1, c), l = ON(r, c - 1), rt = ON(r, c + 1);
+            const R = 0.5;
+            if (style === 'liquid') {
+              out.push(rrect(x, y, 1, 1, !t && !l ? R : 0, !t && !rt ? R : 0, !b && !rt ? R : 0, !b && !l ? R : 0));
+            } else { // leaf
+              out.push(rrect(x, y, 1, 1, !t && !l ? R : 0, 0, !b && !rt ? R : 0, 0));
+            }
+          }
+        } else if (style === 'liquid' && FREE(r, c)) {
+          const R = 0.5;
+          const t = ON(r - 1, c), b = ON(r + 1, c), l = ON(r, c - 1), rt = ON(r, c + 1);
+          if (t && l && ON(r - 1, c - 1)) out.push('M' + x + ' ' + y + 'H' + f3(x + R) + 'A' + R + ' ' + R + ' 0 0 0 ' + x + ' ' + f3(y + R) + 'Z');
+          if (t && rt && ON(r - 1, c + 1)) out.push('M' + (x + 1) + ' ' + y + 'V' + f3(y + R) + 'A' + R + ' ' + R + ' 0 0 0 ' + f3(x + 1 - R) + ' ' + y + 'Z');
+          if (b && rt && ON(r + 1, c + 1)) out.push('M' + (x + 1) + ' ' + (y + 1) + 'H' + f3(x + 1 - R) + 'A' + R + ' ' + R + ' 0 0 0 ' + (x + 1) + ' ' + f3(y + 1 - R) + 'Z');
+          if (b && l && ON(r + 1, c - 1)) out.push('M' + x + ' ' + (y + 1) + 'V' + f3(y + 1 - R) + 'A' + R + ' ' + R + ' 0 0 0 ' + f3(x + R) + ' ' + (y + 1) + 'Z');
+        }
+      }
+    }
+    return out.join('');
+  }
+
+  // Eye shapes were chosen by decoder testing: corner radii above ~2.2 modules on
+  // more than one corner (or full circles) make ZXing-based scanners miss the finder.
+  const EYE_FRAMES = ['square', 'rounded', 'drop', 'petal', 'dotted'];
+  const EYE_BALLS = ['square', 'rounded', 'circle', 'drop', 'petal'];
+
+  // corner radii [tl,tr,br,bl]; `face` is the corner pointing at the code's center
+  function dropRadii(face, big, small) { const r = [big, big, big, big]; r[face] = small; return r; }
+  function petalRadii(face, big, small) { const r = [small, small, small, small]; r[(face + 2) % 4] = big; return r; }
+  function eyeFramePath(style, x, y, face) {
+    if (style === 'dotted') {
+      let d = '';
+      for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) if (i === 0 || j === 0 || i === 6 || j === 6) d += circle(x + i + 0.5, y + j + 0.5, 0.46);
+      return d;
+    }
+    let o;
+    if (style === 'rounded') o = [2.2, 2.2, 2.2, 2.2];
+    else if (style === 'drop') o = dropRadii(face, 2.2, 0.4);
+    else if (style === 'petal') o = petalRadii(face, 3.0, 0.4);
+    else o = [0, 0, 0, 0];
+    const i = o.map((v) => Math.max(0, v - 1));
+    return rrect(x, y, 7, 7, o[0], o[1], o[2], o[3]) + rrectHole(x + 1, y + 1, 5, 5, i[0], i[1], i[2], i[3]);
+  }
+  function eyeBallPath(style, x, y, face) {
+    const bx = x + 2, by = y + 2;
+    if (style === 'circle') return circle(bx + 1.5, by + 1.5, 1.5);
+    let o;
+    if (style === 'rounded') o = [0.9, 0.9, 0.9, 0.9];
+    else if (style === 'drop') o = dropRadii(face, 1.3, 0.2);
+    else if (style === 'petal') o = petalRadii(face, 1.5, 0.2);
+    else o = [0, 0, 0, 0];
+    return rrect(bx, by, 3, 3, o[0], o[1], o[2], o[3]);
+  }
+
+  // alignment pattern centers (ISO 18004 table, generated)
+  function alignmentPositions(ver) {
+    if (ver < 2) return [];
+    const num = Math.floor(ver / 7) + 2;
+    const step = ver === 32 ? 26 : Math.floor((ver * 4 + num * 2 + 1) / (num * 2 - 2)) * 2;
+    const res = [6];
+    for (let pos = ver * 4 + 10; res.length < num; pos -= step) res.splice(1, 0, pos);
+    return res;
+  }
+  function alignmentCenters(ver, n) {
+    const p = alignmentPositions(ver), out = [];
+    for (const r of p) for (const c of p) {
+      if ((r < 9 && c < 9) || (r < 9 && c > n - 10) || (r > n - 10 && c < 9)) continue;
+      out.push([r, c]);
+    }
+    return out;
+  }
+  // solid alignment marks keep styled codes easy to lock onto
+  function alignPaths(frameStyle, ballStyle, cx, cy) {
+    let ring, dot;
+    if (frameStyle === 'square') ring = rrect(cx - 2.5, cy - 2.5, 5, 5, 0, 0, 0, 0) + rrectHole(cx - 1.5, cy - 1.5, 3, 3, 0, 0, 0, 0);
+    else if (frameStyle === 'dotted') {
+      ring = '';
+      for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) if (Math.abs(i) === 2 || Math.abs(j) === 2) ring += circle(cx + i, cy + j, 0.46);
+    } else ring = rrect(cx - 2.5, cy - 2.5, 5, 5, 1.5, 1.5, 1.5, 1.5) + rrectHole(cx - 1.5, cy - 1.5, 3, 3, 0.5, 0.5, 0.5, 0.5);
+    dot = ballStyle === 'square' ? rrect(cx - 0.5, cy - 0.5, 1, 1, 0, 0, 0, 0) : circle(cx, cy, 0.5);
+    return ring + dot;
+  }
+
+  // ---------- icons (24-unit box) ----------
+  function starPath() {
+    let d = '';
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 5, R = i % 2 ? 4.1 : 9.6;
+      d += (i ? 'L' : 'M') + f3(12 + R * Math.cos(a)) + ' ' + f3(12.8 + R * Math.sin(a));
+    }
+    return d + 'Z';
+  }
+  const ICONS = {
+    link: { mode: 'stroke', d: 'M10 13.5a4.6 4.6 0 0 0 6.6.4l2.9-2.9a4.6 4.6 0 0 0-6.5-6.5l-1.5 1.5M14 10.5a4.6 4.6 0 0 0-6.6-.4l-2.9 2.9a4.6 4.6 0 0 0 6.5 6.5l1.5-1.5' },
+    globe: { mode: 'stroke', d: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM3.4 12h17.2M12 3.2c2.4 2.5 3.6 5.4 3.6 8.8s-1.2 6.3-3.6 8.8c-2.4-2.5-3.6-5.4-3.6-8.8s1.2-6.3 3.6-8.8z' },
+    wifi: { mode: 'stroke', d: 'M3.3 10.6a12.4 12.4 0 0 1 17.4 0M6.6 13.9a7.7 7.7 0 0 1 10.8 0M9.9 17.2a3 3 0 0 1 4.2 0M12 20.4h.01' },
+    mail: { mode: 'stroke', d: 'M5 5.5h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2zM3.5 7.4 12 13.2l8.5-5.8' },
+    chat: { mode: 'stroke', d: 'M5.5 4.5h13a2.5 2.5 0 0 1 2.5 2.5v7.5a2.5 2.5 0 0 1-2.5 2.5h-6.5l-5 3.8v-3.8H5.5A2.5 2.5 0 0 1 3 14.5V7a2.5 2.5 0 0 1 2.5-2.5z' },
+    heart: { mode: 'fill', d: 'M12 20.8S2.6 15.2 2.6 8.9C2.6 6 4.8 3.9 7.6 3.9c1.8 0 3.4.9 4.4 2.3 1-1.4 2.6-2.3 4.4-2.3 2.8 0 5 2.1 5 5 0 6.3-9.4 11.9-9.4 11.9z' },
+    star: { mode: 'fill', d: starPath() },
+    sprout: { mode: 'stroke', d: 'M12 21v-8.5M12 12.5c0-4.6 2.9-7.6 8-7.6 0 4.6-2.9 7.6-8 7.6zM12 15.4c0-3.6-2.4-6.1-6.6-6.1 0 3.6 2.4 6.1 6.6 6.1z' }
+  };
+
+  // ---------- scene ----------
+  function paintFor(fill, n, q) {
+    const c = q + n / 2;
+    if (!fill || fill.mode === 'solid') return { type: 'solid', stops: [fill ? fill.c1 : '#000000'] };
+    if (fill.mode === 'linear') {
+      const a = (fill.angle || 0) * Math.PI / 180;
+      const L = (n / 2) * (Math.abs(Math.cos(a)) + Math.abs(Math.sin(a)));
+      return { type: 'linear', x1: c - Math.cos(a) * L, y1: c - Math.sin(a) * L, x2: c + Math.cos(a) * L, y2: c + Math.sin(a) * L, stops: [fill.c1, fill.c2] };
+    }
+    return { type: 'radial', cx: c, cy: c, r: n * 0.72, stops: [fill.c1, fill.c2] };
+  }
+  // color of a paint at a point (module units)
+  function paintAt(p, x, y) {
+    if (p.type === 'solid') return hexToRgb(p.stops[0]);
+    let t;
+    if (p.type === 'linear') {
+      const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+      t = ((x - p.x1) * dx + (y - p.y1) * dy) / (dx * dx + dy * dy);
+    } else t = Math.hypot(x - p.cx, y - p.cy) / p.r;
+    return mixRgb(hexToRgb(p.stops[0]), hexToRgb(p.stops[1]), clamp(t, 0, 1));
+  }
+
+  const FONT_STACK = "'Bricolage Grotesque', 'Segoe UI', system-ui, -apple-system, sans-serif";
+
+  function buildScene(mx, d, measure) {
+    const n = mx.n, q = d.margin, S = n + 2 * q;
+    const inFinder = (r, c) => (r < 8 && c < 8) || (r < 8 && c >= n - 8) || (r >= n - 8 && c < 8);
+    const ctr = d.center || { type: 'none' };
+    const centerOn = ctr.type !== 'none' && !(ctr.type === 'image' && !ctr.img) && !(ctr.type === 'text' && !String(ctr.text || '').trim());
+    const cx = q + n / 2, cy = q + n / 2;
+    const half = centerOn ? (ctr.size * n) / 2 : 0;
+    const shape = ctr.type === 'image' ? 'square' : (ctr.shape || 'circle');
+    const excavated = (r, c) => {
+      if (!centerOn) return false;
+      const dx = c + q + 0.5 - cx, dy = r + q + 0.5 - cy, pad = 1.0;
+      if (shape === 'circle') return Math.hypot(dx, dy) < half + pad;
+      const rr = half * 0.3;
+      const ex = Math.max(Math.abs(dx) - (half - rr), 0), ey = Math.max(Math.abs(dy) - (half - rr), 0);
+      return Math.hypot(ex, ey) - rr < pad;
+    };
+    const on = new Uint8Array(n * n), free = new Uint8Array(n * n), inAlign = new Uint8Array(n * n);
+    const aligns = [];
+    for (const [ar, ac] of alignmentCenters(mx.version, n)) {
+      let clear = true;
+      for (let r = ar - 2; r <= ar + 2 && clear; r++) for (let c = ac - 2; c <= ac + 2; c++) if (excavated(r, c)) { clear = false; break; }
+      if (!clear) continue;
+      aligns.push([ar, ac]);
+      for (let r = ar - 2; r <= ar + 2; r++) for (let c = ac - 2; c <= ac + 2; c++) inAlign[r * n + c] = 1;
+    }
+    let removed = 0, darkTotal = 0;
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+      const i = r * n + c;
+      if (inFinder(r, c) || inAlign[i]) continue;
+      const ex = excavated(r, c);
+      if (mx.m[i]) { darkTotal++; if (ex) removed++; else on[i] = 1; } else if (!ex) free[i] = 1;
+    }
+    const ON = (r, c) => r >= 0 && c >= 0 && r < n && c < n && on[r * n + c] === 1;
+    const FREE = (r, c) => r >= 0 && c >= 0 && r < n && c < n && free[r * n + c] === 1;
+
+    const main = paintFor(d.fill, n, q);
+    const eyeCustom = d.eyes && d.eyes.custom;
+    const framePaint = eyeCustom ? { type: 'solid', stops: [d.eyes.frame] } : main;
+    const ballPaint = eyeCustom ? { type: 'solid', stops: [d.eyes.ball] } : main;
+
+    const spots = [[0, 0, 2], [0, n - 7, 3], [n - 7, 0, 1]]; // row, col, center-facing corner index (tl=0,tr=1,br=2,bl=3)
+    let frames = '', balls = '';
+    for (const [r, c, face] of spots) {
+      frames += eyeFramePath(d.eyeFrame, c + q, r + q, face);
+      balls += eyeBallPath(d.eyeBall, c + q, r + q, face);
+    }
+
+    let alignD = '';
+    for (const [ar, ac] of aligns) alignD += alignPaths(d.eyeFrame, d.eyeBall, ac + q + 0.5, ar + q + 0.5);
+    const layers = [
+      { d: modulePath(d.module, n, q, ON, FREE) + alignD, paint: main },
+      { d: frames, paint: framePaint },
+      { d: balls, paint: ballPaint }
+    ];
+
+    // label
+    let labelH = 0, label = null;
+    const lab = d.label || {};
+    const labText = String(lab.text || '').trim();
+    if (lab.style && lab.style !== 'none' && labText) {
+      const fs = Math.max(2.1, S * 0.072);
+      labelH = fs * 2.5;
+      const cyL = S + labelH / 2 - q * 0.45;
+      const w = measure ? measure(labText, fs) : labText.length * fs * 0.6;
+      label = { text: labText, style: lab.style, fs, cy: cyL, w, padX: fs * 0.85, pillH: fs * 1.9 };
+    }
+    const H = S + (labelH ? labelH - q * 0.45 : 0);
+
+    let center = null;
+    if (centerOn) {
+      center = { type: ctr.type, cx, cy, half, shape, text: String(ctr.text || '').trim().slice(0, 3), icon: ctr.icon, img: ctr.img, plate: ctr.plate !== false };
+    }
+    const bgRgb = hexToRgb(d.bg.color);
+    return {
+      n, q, S, W: S, H, layers, main, center, label,
+      bg: { color: d.bg.color, transparent: !!d.bg.transparent, radius: d.bg.radius || 0 },
+      onText: d.bg.transparent ? (relLum(paintAt(main, cx, cy)) > 0.5 ? '#111111' : '#ffffff') : rgbToHex(bgRgb),
+      stats: { removed, darkTotal }
+    };
+  }
+
+  // ---------- SVG ----------
+  const xmlEsc = (s) => String(s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
+  function sceneToSVG(sc, opt) {
+    opt = opt || {};
+    const id = opt.id || ('b' + Math.random().toString(36).slice(2, 8));
+    const defs = [];
+    const paintRef = (p, k) => {
+      if (p.type === 'solid') return xmlEsc(p.stops[0]);
+      const gid = id + k;
+      const stops = '<stop offset="0" stop-color="' + xmlEsc(p.stops[0]) + '"/><stop offset="1" stop-color="' + xmlEsc(p.stops[1]) + '"/>';
+      if (p.type === 'linear') defs.push('<linearGradient id="' + gid + '" gradientUnits="userSpaceOnUse" x1="' + f3(p.x1) + '" y1="' + f3(p.y1) + '" x2="' + f3(p.x2) + '" y2="' + f3(p.y2) + '">' + stops + '</linearGradient>');
+      else defs.push('<radialGradient id="' + gid + '" gradientUnits="userSpaceOnUse" cx="' + f3(p.cx) + '" cy="' + f3(p.cy) + '" r="' + f3(p.r) + '">' + stops + '</radialGradient>');
+      return 'url(#' + gid + ')';
+    };
+    const vb = opt.viewBox || [0, 0, sc.W, sc.H];
+    const body = [];
+    if (!sc.bg.transparent) {
+      const r = Math.min(sc.bg.radius, sc.W / 2);
+      body.push('<path d="' + rrect(0, 0, sc.W, sc.H, r, r, r, r) + '" fill="' + xmlEsc(sc.bg.color) + '"/>');
+    }
+    const mainRef = paintRef(sc.main, 'm');
+    sc.layers.forEach((L, i) => {
+      if (!L.d) return;
+      const ref = L.paint === sc.main ? mainRef : paintRef(L.paint, 'l' + i);
+      body.push('<path d="' + L.d + '" fill="' + ref + '"/>');
+    });
+    const ce = sc.center;
+    if (ce) {
+      if (ce.type === 'image') {
+        const s = ce.half * 2, x = ce.cx - ce.half, y = ce.cy - ce.half, rr = ce.half * 0.28;
+        if (ce.plate && !sc.bg.transparent) body.push('<path d="' + rrect(x, y, s, s, rr, rr, rr, rr) + '" fill="' + xmlEsc(sc.bg.color) + '"/>');
+        const pad = ce.plate ? s * 0.1 : 0;
+        body.push('<image href="' + xmlEsc(ce.img.src) + '" x="' + f3(x + pad) + '" y="' + f3(y + pad) + '" width="' + f3(s - 2 * pad) + '" height="' + f3(s - 2 * pad) + '" preserveAspectRatio="xMidYMid meet"/>');
+      } else {
+        const badge = ce.shape === 'circle' ? circle(ce.cx, ce.cy, ce.half) : rrect(ce.cx - ce.half, ce.cy - ce.half, ce.half * 2, ce.half * 2, ce.half * 0.42, ce.half * 0.42, ce.half * 0.42, ce.half * 0.42);
+        body.push('<path d="' + badge + '" fill="' + mainRef + '"/>');
+        if (ce.type === 'text') {
+          const fs = textSize(ce.text, ce.half);
+          body.push('<text x="' + f3(ce.cx) + '" y="' + f3(ce.cy) + '" text-anchor="middle" dominant-baseline="central" font-family="' + xmlEsc(FONT_STACK) + '" font-weight="800" font-size="' + f3(fs) + '" fill="' + xmlEsc(sc.onText) + '">' + xmlEsc(ce.text) + '</text>');
+        } else if (ce.type === 'icon' && ICONS[ce.icon]) {
+          const ic = ICONS[ce.icon], box = ce.half * 1.18, k = box / 24;
+          const attrs = ic.mode === 'fill' ? 'fill="' + xmlEsc(sc.onText) + '"' : 'fill="none" stroke="' + xmlEsc(sc.onText) + '" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"';
+          body.push('<path transform="translate(' + f3(ce.cx - box / 2) + ' ' + f3(ce.cy - box / 2) + ') scale(' + f3(k * 1000) / 1000 + ')" d="' + ic.d + '" ' + attrs + '/>');
+        }
+      }
+    }
+    const lb = sc.label;
+    if (lb) {
+      const font = 'font-family="' + xmlEsc(FONT_STACK) + '" font-weight="700" font-size="' + f3(lb.fs) + '"';
+      if (lb.style === 'pill') {
+        const w = lb.w + lb.padX * 2, h = lb.pillH, x = sc.W / 2 - w / 2, y = lb.cy - h / 2;
+        body.push('<path d="' + rrect(x, y, w, h, h / 2, h / 2, h / 2, h / 2) + '" fill="' + mainRef + '"/>');
+        body.push('<text x="' + f3(sc.W / 2) + '" y="' + f3(lb.cy) + '" text-anchor="middle" dominant-baseline="central" ' + font + ' fill="' + xmlEsc(sc.onText) + '">' + xmlEsc(lb.text) + '</text>');
+      } else {
+        body.push('<text x="' + f3(sc.W / 2) + '" y="' + f3(lb.cy) + '" text-anchor="middle" dominant-baseline="central" ' + font + ' fill="' + mainRef + '">' + xmlEsc(lb.text) + '</text>');
+      }
+    }
+    const size = opt.px ? ' width="' + opt.px + '" height="' + Math.round(opt.px * vb[3] / vb[2]) + '"' : '';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb.map(f3).join(' ') + '"' + size + (opt.attrs || '') + '>' +
+      (defs.length ? '<defs>' + defs.join('') + '</defs>' : '') + body.join('') + '</svg>';
+  }
+  function textSize(t, half) {
+    const len = Math.max(1, t.length);
+    return half * (len === 1 ? 1.2 : len === 2 ? 0.98 : 0.74);
+  }
+
+  // ---------- canvas ----------
+  function canvasPaint(ctx, p) {
+    if (p.type === 'solid') return p.stops[0];
+    let g;
+    if (p.type === 'linear') g = ctx.createLinearGradient(p.x1, p.y1, p.x2, p.y2);
+    else g = ctx.createRadialGradient(p.cx, p.cy, 0, p.cx, p.cy, p.r);
+    g.addColorStop(0, p.stops[0]);
+    g.addColorStop(1, p.stops[1]);
+    return g;
+  }
+  // draws the scene at `px` pixels wide, origin at the context's current origin
+  function drawScene(ctx, sc, px, opt) {
+    opt = opt || {};
+    const k = px / sc.W;
+    ctx.save();
+    ctx.scale(k, k);
+    if (!sc.bg.transparent || opt.underlay) {
+      const r = Math.min(sc.bg.radius, sc.W / 2);
+      ctx.fillStyle = sc.bg.transparent ? opt.underlay : sc.bg.color;
+      if (sc.bg.transparent) ctx.fillRect(0, 0, sc.W, sc.H);
+      else ctx.fill(new Path2D(rrect(0, 0, sc.W, sc.H, r, r, r, r)));
+    }
+    const mainPaint = canvasPaint(ctx, sc.main);
+    for (const L of sc.layers) {
+      if (!L.d) continue;
+      ctx.fillStyle = L.paint === sc.main ? mainPaint : canvasPaint(ctx, L.paint);
+      ctx.fill(L.path || (L.path = new Path2D(L.d)));
+    }
+    const ce = sc.center;
+    if (ce) {
+      if (ce.type === 'image') {
+        const s = ce.half * 2, x = ce.cx - ce.half, y = ce.cy - ce.half, rr = ce.half * 0.28;
+        if (ce.plate && !sc.bg.transparent) { ctx.fillStyle = sc.bg.color; ctx.fill(new Path2D(rrect(x, y, s, s, rr, rr, rr, rr))); }
+        const pad = ce.plate ? s * 0.1 : 0, box = s - 2 * pad;
+        const iw = ce.img.naturalWidth || ce.img.width, ih = ce.img.naturalHeight || ce.img.height;
+        if (iw && ih) {
+          const sc2 = Math.min(box / iw, box / ih), w = iw * sc2, h = ih * sc2;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(ce.img, x + pad + (box - w) / 2, y + pad + (box - h) / 2, w, h);
+        }
+      } else {
+        ctx.fillStyle = mainPaint;
+        ctx.fill(new Path2D(ce.shape === 'circle' ? circle(ce.cx, ce.cy, ce.half) : rrect(ce.cx - ce.half, ce.cy - ce.half, ce.half * 2, ce.half * 2, ce.half * 0.42, ce.half * 0.42, ce.half * 0.42, ce.half * 0.42)));
+        if (ce.type === 'icon' && ICONS[ce.icon]) {
+          const ic = ICONS[ce.icon], box = ce.half * 1.18;
+          ctx.save();
+          ctx.translate(ce.cx - box / 2, ce.cy - box / 2);
+          ctx.scale(box / 24, box / 24);
+          const p2 = new Path2D(ic.d);
+          if (ic.mode === 'fill') { ctx.fillStyle = sc.onText; ctx.fill(p2); } else {
+            ctx.strokeStyle = sc.onText; ctx.lineWidth = 2.3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(p2);
+          }
+          ctx.restore();
+        }
+      }
+    }
+    ctx.restore();
+    // text in pixel space for crisp glyphs
+    const textAt = (t, x, y, fsMod, weight, fill) => {
+      ctx.save();
+      ctx.font = weight + ' ' + (fsMod * k) + 'px ' + FONT_STACK;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = fill;
+      ctx.fillText(t, x * k, y * k);
+      ctx.restore();
+    };
+    if (ce && ce.type === 'text') textAt(ce.text, ce.cx, ce.cy + ce.half * 0.04, textSize(ce.text, ce.half), 800, sc.onText);
+    const lb = sc.label;
+    if (lb) {
+      if (lb.style === 'pill') {
+        const w = lb.w + lb.padX * 2, h = lb.pillH;
+        ctx.save(); ctx.scale(k, k); ctx.fillStyle = canvasPaint(ctx, sc.main);
+        ctx.fill(new Path2D(rrect(sc.W / 2 - w / 2, lb.cy - h / 2, w, h, h / 2, h / 2, h / 2, h / 2))); ctx.restore();
+        textAt(lb.text, sc.W / 2, lb.cy + lb.fs * 0.04, lb.fs, 700, sc.onText);
+      } else {
+        ctx.save(); ctx.scale(k, k); const g = canvasPaint(ctx, sc.main); ctx.restore();
+        // gradient defined in module units: build a pixel-space equivalent
+        let fill = g;
+        if (sc.main.type !== 'solid') {
+          const p = sc.main;
+          fill = p.type === 'linear' ? ctx.createLinearGradient(p.x1 * k, p.y1 * k, p.x2 * k, p.y2 * k) : ctx.createRadialGradient(p.cx * k, p.cy * k, 0, p.cx * k, p.cy * k, p.r * k);
+          fill.addColorStop(0, p.stops[0]); fill.addColorStop(1, p.stops[1]);
+        }
+        textAt(lb.text, sc.W / 2, lb.cy + lb.fs * 0.04, lb.fs, 700, fill);
+      }
+    }
+  }
+
+  // ---------- scan check (jsQR) ----------
+  function sameBytes(a, b) {
+    if (!a || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+  function decodeCanvas(cv) {
+    if (!root.jsQR) return null;
+    const ctx = cv.getContext('2d', { willReadFrequently: true });
+    const img = ctx.getImageData(0, 0, cv.width, cv.height);
+    const hit = root.jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
+    if (hit) return hit;
+    // light-on-dark codes: invert the pixels first, as camera decoders do
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) { d[i] = 255 - d[i]; d[i + 1] = 255 - d[i + 1]; d[i + 2] = 255 - d[i + 2]; }
+    return root.jsQR(d, img.width, img.height, { inversionAttempts: 'dontInvert' });
+  }
+  // Three reads: crisp, soft focus, and small + soft (calibrated against ZXing).
+  // Returns {passes: 0..3, level: 'strong' | 'ok' | 'fail'}
+  function scanScene(sc, bytes, mkCanvas) {
+    const fgLum = relLum(paintAt(sc.main, sc.q + sc.n / 2, sc.q + sc.n / 2));
+    const underlay = sc.bg.transparent ? (fgLum > 0.45 ? '#000000' : '#ffffff') : sc.bg.color;
+    const read = (ppm, blurMod, src) => {
+      const px = Math.round(sc.W * ppm);
+      const cv = mkCanvas(px, Math.round(px * sc.H / sc.W));
+      const ctx = cv.getContext('2d', { willReadFrequently: true });
+      ctx.fillStyle = underlay; ctx.fillRect(0, 0, cv.width, cv.height);
+      if (src) {
+        if (blurMod && 'filter' in ctx) ctx.filter = 'blur(' + (blurMod * ppm).toFixed(2) + 'px)';
+        ctx.drawImage(src, 0, 0, cv.width, cv.height);
+      } else drawScene(ctx, sc, px, { underlay });
+      const r = decodeCanvas(cv);
+      return { cv, ok: !!r && sameBytes(r.binaryData, bytes) };
+    };
+    const a = read(8, 0, null);
+    const b = read(8, 0.3, a.cv);
+    const c = read(5, 0.3, a.cv);
+    const passes = (a.ok ? 1 : 0) + (b.ok ? 1 : 0) + (c.ok ? 1 : 0);
+    return { passes, level: passes === 3 ? 'strong' : passes ? 'ok' : 'fail' };
+  }
+
+  // ======================================================================
+  // GROW: QR modules become voxel cubes that assemble into a tree
+  // ======================================================================
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hashStr(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function hash3(x, y, z, seed) {
+    let h = (seed ^ Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263) ^ Math.imul(z | 0, 1274126177)) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+  }
+
+  const SEASONS = {
+    spring: {
+      leaf: ['#78c467', '#8fd27a', '#63b35d', '#a3dc8b'], accent: ['#f7a8c6', '#fff3b0'], accentRate: 0.07,
+      grass: ['#8fd06c', '#82c662', '#9ad977'], soil: ['#9a6844', '#8a5b3a'], bark: '#7a4f33', root: '#68432b',
+      flower: ['#ff8fb1', '#ffd45e', '#ff7a59', '#b78cff'], stem: '#4f9945', rock: ['#a9ada7', '#939791'], scatter: ['#ffd45e', '#ff8fb1', '#b78cff']
+    },
+    summer: {
+      leaf: ['#3d9b54', '#4daf60', '#2e874a', '#5cbc69'], accent: ['#e4473a', '#f0813b'], accentRate: 0.06,
+      grass: ['#62ae50', '#57a347', '#6cb95a'], soil: ['#8f5f3e', '#7f5236'], bark: '#6f472e', root: '#5d3b26',
+      flower: ['#ffcf40', '#ff6b4a', '#8fd3ff', '#ff9ec2'], stem: '#3f8a3a', rock: ['#a2a39c', '#8b8c86'], scatter: ['#ffcf40', '#ff6b4a']
+    },
+    autumn: {
+      leaf: ['#ea8a38', '#d95f3a', '#f2b548', '#c8472f', '#e8a23c'], accent: ['#f6d36c'], accentRate: 0.05,
+      grass: ['#b6b25b', '#a8a651', '#c2bd66'], soil: ['#8d5c3c', '#7c5034'], bark: '#5e3e2a', root: '#4f3423',
+      flower: ['#ea8a38', '#c8472f', '#f2b548'], stem: '#7d8a3c', rock: ['#a7a197', '#918b82'], scatter: ['#ea8a38', '#d95f3a', '#f2b548']
+    },
+    sakura: {
+      leaf: ['#f7b5cb', '#f29bb8', '#fbd2df', '#eb86a9'], accent: ['#ffffff'], accentRate: 0.08,
+      grass: ['#9fd38a', '#92c97d', '#acdb98'], soil: ['#93644a', '#82573f'], bark: '#5a3b33', root: '#4b3029',
+      flower: ['#ffffff', '#f7b5cb', '#ffd9e5'], stem: '#5f9e57', rock: ['#b0afb3', '#99989d'], scatter: ['#f7b5cb', '#fbd2df', '#ffffff']
+    },
+    winter: {
+      leaf: ['#2f6b57', '#3a7a64', '#285e4c'], snow: ['#f6f9fb', '#e9f0f4'], accent: ['#f6f9fb'], accentRate: 0,
+      grass: ['#f1f5f7', '#e7eef2', '#f8fafb'], soil: ['#8b6c58', '#7b5e4c'], bark: '#5a4033', root: '#4b352a',
+      flower: ['#d93a3a', '#ffffff'], stem: '#3b6b55', rock: ['#9fa6ab', '#8a9196'], scatter: ['#ffffff', '#f1f5f7']
+    }
+  };
+
+  const BACKDROPS = {
+    beige: { bg: '#ecdfcb', light: 'rgba(255,250,240,0.55)', ink: '#26211c', shadow: '58,40,22' },
+    sage: { bg: '#d9e4d4', light: 'rgba(250,255,248,0.55)', ink: '#1d2a22', shadow: '30,52,36' },
+    sky: { bg: '#d7e4ef', light: 'rgba(250,253,255,0.6)', ink: '#1b2532', shadow: '24,40,64' },
+    night: { bg: '#1c2130', light: 'rgba(120,140,190,0.22)', ink: '#efe9dd', shadow: '0,0,0' }
+  };
+
+  function voxelTree(k, seed) {
+    const vox = new Map();
+    const key = (x, y, z) => (x + 512) * 1048576 + (y + 512) * 1024 + (z + 512);
+    const add = (x, y, z, g, role) => { vox.set(key(x, y, z), { x, y, z, g, role }); };
+    const rng = mulberry32(seed ^ 0x9e3779b9);
+    // proportions scale with k so dense codes grow the same tree with finer voxels
+    const h = Math.max(2, Math.round(4.4 * k));
+    const top = Math.max(2, Math.round(1.55 * k));
+    for (let x = -h; x <= h; x++) for (let z = -h; z <= h; z++) {
+      for (let y = 0; y < top; y++) add(x, y, z, 'plat', 'soil');
+      add(x, top, z, 'plat', 'grass');
+    }
+    const trunkH = Math.max(3, Math.round(3.5 * k + 0.6));
+    const thick = k >= 1.25;
+    const cells = thick ? [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]] : [[0, 0]];
+    for (let y = top + 1; y <= top + trunkH; y++) for (const [x, z] of cells) add(x, y, z, 'trunk', 'bark');
+    const rr = thick ? 2 : 1;
+    for (const [x, z] of [[rr, 0], [-rr, 0], [0, rr], [0, -rr]]) add(x, top + 1, z, 'trunk', 'root');
+    if (thick) for (const [x, z] of [[1, 1], [-1, -1], [1, -1], [-1, 1]]) add(x, top + 1, z, 'trunk', 'root');
+
+    const R = 3.35 * k + 0.5;
+    const cyc = top + trunkH + R * 0.6;
+    const j = () => (rng() - 0.5) * R * 0.25;
+    const sph = [
+      [0, cyc, 0, R],
+      [R * 0.62 + j(), cyc - R * 0.3, -R * 0.2 + j(), R * 0.66],
+      [-R * 0.48 + j(), cyc - R * 0.24, R * 0.5 + j(), R * 0.62],
+      [-R * 0.18 + j(), cyc + R * 0.55, -R * 0.22 + j(), R * 0.6],
+      [R * 0.28 + j(), cyc + R * 0.12, R * 0.6 + j(), R * 0.54]
+    ];
+    const ext = Math.ceil(R * 1.75);
+    const y0 = Math.floor(cyc - R * 1.6), y1 = Math.ceil(cyc + R * 1.6);
+    for (let x = -ext; x <= ext; x++) for (let z = -ext; z <= ext; z++) for (let y = Math.max(top + 1, y0); y <= y1; y++) {
+      const nz = (hash3(x, y, z, seed) - 0.5) * 0.8;
+      let inside = false;
+      for (const s of sph) {
+        const dx = x - s[0], dy = (y - s[1]) * 1.1, dz = z - s[2], rad = s[3] + nz;
+        if (dx * dx + dy * dy + dz * dz < rad * rad) { inside = true; break; }
+      }
+      if (inside && !vox.has(key(x, y, z))) add(x, y, z, 'canopy', 'leaf');
+    }
+    // garden details on the grass, kept mostly to the visible front half
+    const grassFree = [];
+    for (let x = -h; x <= h; x++) for (let z = -h; z <= h; z++) {
+      if (Math.abs(x) <= rr + 1 && Math.abs(z) <= rr + 1) continue;
+      if (x + z < -h * 0.4) continue;
+      if (vox.has(key(x, top + 1, z))) continue;
+      grassFree.push([x, z]);
+    }
+    for (let i = grassFree.length - 1; i > 0; i--) { const t = Math.floor(rng() * (i + 1)); [grassFree[i], grassFree[t]] = [grassFree[t], grassFree[i]]; }
+    const flowers = Math.round(2 + 2.6 * k), tall = k >= 1.15;
+    const taken = new Set();
+    const near = (x, z) => { for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) if (taken.has((x + a) + ',' + (z + b))) return true; return false; };
+    let placed = 0, idx = 0;
+    while (placed < flowers && idx < grassFree.length) {
+      const [x, z] = grassFree[idx++];
+      if (near(x, z)) continue;
+      taken.add(x + ',' + z);
+      if (tall && placed % 2 === 0) { add(x, top + 1, z, 'deco', 'stem'); add(x, top + 2, z, 'deco', 'flower'); }
+      else add(x, top + 1, z, 'deco', 'scatter');
+      placed++;
+    }
+    // a small rock
+    while (idx < grassFree.length) {
+      const [x, z] = grassFree[idx++];
+      if (near(x, z) || Math.abs(x) < h - 2 && Math.abs(z) < h - 2) continue;
+      taken.add(x + ',' + z);
+      add(x, top + 1, z, 'deco', 'rock');
+      break;
+    }
+    const vis = [], hid = [];
+    for (const v of vox.values()) {
+      const exposed = !vox.has(key(v.x + 1, v.y, v.z)) || !vox.has(key(v.x, v.y + 1, v.z)) || !vox.has(key(v.x, v.y, v.z + 1));
+      v.exposedTop = !vox.has(key(v.x, v.y + 1, v.z));
+      (exposed ? vis : hid).push(v);
+    }
+    return { vox, vis, hid, h, top, trunkH, R, cyc, key };
+  }
+
+  function pickTree(N, seed) {
+    // coarse scan, then refine inside the bracket where the visible count crosses N
+    let best = null, lo = 0.4, hi = null;
+    const consider = (t) => { if (t.vis.length <= N && (!best || t.vis.length >= best.vis.length)) best = t; };
+    for (let k = 0.4; k < 8; k += 0.1) {
+      const t = voxelTree(k, seed);
+      consider(t);
+      if (t.vis.length > N) { hi = k; break; }
+      lo = k;
+    }
+    if (hi !== null) for (let k = lo + 0.01; k < hi; k += 0.01) consider(voxelTree(k, seed));
+    return best || voxelTree(0.4, seed);
+  }
+
+  // per-voxel color for a season (ambient occlusion + canopy self-shadow baked in)
+  function voxelColor(v, tree, season, seed) {
+    const P = SEASONS[season] || SEASONS.spring;
+    const hsh = hash3(v.x, v.y, v.z, seed ^ 0x51ed);
+    const pick = (arr) => arr[Math.floor(hsh * arr.length) % arr.length];
+    let base;
+    switch (v.role) {
+      case 'soil': base = pick(P.soil); break;
+      case 'grass': base = pick(P.grass); break;
+      case 'bark': base = P.bark; break;
+      case 'root': base = P.root; break;
+      case 'stem': base = P.stem; break;
+      case 'flower': base = pick(P.flower); break;
+      case 'rock': base = pick(P.rock); break;
+      case 'scatter': base = pick(P.scatter); break;
+      default:
+        if (season === 'winter' && v.exposedTop) base = pick(P.snow);
+        else if (P.accentRate && hash3(v.x, v.y, v.z, seed ^ 0xacce) < P.accentRate) base = pick(P.accent);
+        else base = pick(P.leaf);
+    }
+    let rgb = hexToRgb(base);
+    let k = 1;
+    let occ = 0;
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+      if (!a && !b && !c) continue;
+      if (tree.vox.has(tree.key(v.x + a, v.y + b, v.z + c))) occ++;
+    }
+    k *= clamp(1.06 - occ * 0.011, 0.8, 1.04);
+    if (v.g === 'canopy') {
+      const bottom = tree.cyc - tree.R * 1.05;
+      k *= lerp(0.8, 1.04, smooth(bottom, bottom + tree.R * 1.4, v.y));
+    }
+    if (v.role === 'grass') {
+      // shade under the canopy
+      for (let y = v.y + 2; y < v.y + 40; y++) if (tree.vox.has(tree.key(v.x, y, v.z)) && tree.vox.get(tree.key(v.x, y, v.z)).g === 'canopy') { k *= 0.84; break; }
+    }
+    k *= 0.97 + hsh * 0.06;
+    return [rgb[0] * k, rgb[1] * k, rgb[2] * k];
+  }
+
+  const T_FLAT = 1.0, T_TILT = 1.45, T_DEP0 = 2.2, T_SPREAD = 2.4, T_HOLD = 2.8, REV_SPEED = 1.45, T_END_HOLD = 0.35;
+  const ISO_PITCH = Math.atan(1 / Math.SQRT2);
+  const GLOW = [255, 251, 236];
+  const AMB = 0.6, DIF = 0.42;
+  const LIGHT = (() => { const v = [-0.42, 1, 0.62], l = Math.hypot(v[0], v[1], v[2]); return v.map((a) => a / l); })();
+
+  // matrix + per-module QR colors (fn(r,c) -> rgb) + seed string
+  function buildGrow(mx, colorAt, seedStr) {
+    const n = mx.n, seed = hashStr(seedStr || 'bloom');
+    const rng = mulberry32(seed ^ 0x2545f491);
+    const mods = [];
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (mx.m[r * n + c]) mods.push({ r, c });
+    const N = mods.length;
+    const tree = pickTree(N, seed);
+    // targets: visible voxels, then hidden fill to use every cube
+    const groupRank = { plat: 0, trunk: 1, canopy: 2, deco: 3 };
+    const targets = tree.vis.map((v) => ({ v, hidden: false }));
+    const extra = N - targets.length;
+    if (extra > 0) {
+      const hid = tree.hid.slice().sort((a, b) => (a.g === 'canopy' ? 0 : 1) - (b.g === 'canopy' ? 0 : 1) || hash3(a.x, a.y, a.z, seed) - hash3(b.x, b.y, b.z, seed));
+      for (let i = 0; i < extra && i < hid.length; i++) targets.push({ v: hid[i], hidden: true });
+    }
+    const tkey = (t) => {
+      const v = t.v, g = groupRank[v.g];
+      if (v.g === 'plat') return g * 1000 + Math.max(Math.abs(v.x), Math.abs(v.z)) * 10 + v.y + hash3(v.x, v.y, v.z, seed) * 0.9;
+      if (v.g === 'trunk') return g * 1000 + v.y + (v.role === 'root' ? -0.5 : 0);
+      if (v.g === 'canopy') return g * 1000 + (v.y - tree.top) * 1.6 + hash3(v.x, v.y, v.z, seed ^ 7) * 4.5;
+      return g * 1000 + hash3(v.x, v.y, v.z, seed ^ 11) * 3;
+    };
+    targets.forEach((t) => { t.key = tkey(t); });
+    targets.sort((a, b) => a.key - b.key);
+    const half = (n - 1) / 2;
+    mods.forEach((m) => { m.key = Math.max(Math.abs(m.r - half), Math.abs(m.c - half)) + rng() * 1.6; });
+    mods.sort((a, b) => a.key - b.key);
+
+    // fit the finished tree into the 9:16 frame (W = 1)
+    const s0 = 0.62 / n;
+    const iso = projBasis(Math.PI / 4, ISO_PITCH);
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const t of targets) {
+      if (t.hidden) continue;
+      for (let i = 0; i < 8; i++) {
+        const px = t.v.x + (i & 1 ? 0.5 : -0.5), py = t.v.y + 0.5 + (i & 2 ? 0.5 : -0.5), pz = t.v.z + (i & 4 ? 0.5 : -0.5);
+        const X = px * iso.r[0] + py * iso.r[1] + pz * iso.r[2];
+        const Y = -(px * iso.u[0] + py * iso.u[1] + pz * iso.u[2]);
+        if (X < minX) minX = X; if (X > maxX) maxX = X; if (Y < minY) minY = Y; if (Y > maxY) maxY = Y;
+      }
+    }
+    const Hn = 16 / 9;
+    const vs = Math.min(0.8 / ((maxX - minX) * s0), (0.6 * Hn) / ((maxY - minY) * s0));
+    const offIso = -((minY + maxY) / 2) * vs * s0; // screen units (W = 1)
+
+    const cubes = mods.map((m, i) => {
+      const t = targets[i] || targets[targets.length - 1];
+      const v = t.v;
+      const dep = T_DEP0 + (N > 1 ? i / (N - 1) : 0) * T_SPREAD;
+      const axis = Math.floor(rng() * 3), turns = (rng() < 0.5 ? -1 : 1) * (rng() < 0.35 ? 2 : 1);
+      return {
+        ax: m.c - half, az: m.r - half, colA: colorAt(m.r, m.c),
+        tx: v.x * vs, ty: (v.y + 0.5) * vs, tz: v.z * vs, v, g: v.g, hidden: t.hidden,
+        dep, dur: 1.5 + rng() * 0.5, l1: 3 + rng() * 5, l2: 1.2 + rng() * 2.5, axis, turns,
+        phase: (v.x * 0.55 + v.z * 0.4 + v.y * 0.25), colB: [0, 0, 0]
+      };
+    });
+    let tA = 0;
+    for (const c of cubes) tA = Math.max(tA, c.dep + c.dur);
+    const G = { n, N, cubes, tree, vs, s0, offIso, seed, tA, season: null };
+    G.cycle = tA + T_HOLD + tA / REV_SPEED + T_END_HOLD;
+    G.platCount = cubes.filter((c) => c.g === 'plat').length;
+    for (const c of cubes) c.shA = shadeSet(c.colA);
+    return G;
+  }
+  function setQrColors(G, colorAt) {
+    for (const c of G.cubes) { c.colA = colorAt(c.az + (G.n - 1) / 2, c.ax + (G.n - 1) / 2); c.shA = shadeSet(c.colA); }
+  }
+  function setSeason(G, season) {
+    if (G.season === season) return;
+    for (const c of G.cubes) { c.colB = voxelColor(c.v, G.tree, season, G.seed); c.shB = shadeSet(c.colB); }
+    G.season = season;
+  }
+  function projBasis(yaw, pitch) {
+    const st = Math.sin(yaw), ct = Math.cos(yaw), sp = Math.sin(pitch), cp = Math.cos(pitch);
+    return { d: [st * cp, sp, ct * cp], r: [ct, 0, -st], u: [-sp * st, cp, -sp * ct] };
+  }
+  function growTime(G, t) {
+    t = ((t % G.cycle) + G.cycle) % G.cycle;
+    if (t < G.tA) return { tau: t, sway: 0, fwd: t };
+    if (t < G.tA + T_HOLD) {
+      const h = t - G.tA;
+      return { tau: G.tA, sway: smooth(0, 0.6, h) * (1 - smooth(T_HOLD - 0.6, T_HOLD, h)), hold: h, fwd: t };
+    }
+    return { tau: Math.max(0, G.tA - (t - G.tA - T_HOLD) * REV_SPEED), sway: 0, fwd: -1 };
+  }
+
+  const FACES = [
+    [[1, 3, 7, 5], [1, 0, 0]], [[0, 4, 6, 2], [-1, 0, 0]],
+    [[2, 6, 7, 3], [0, 1, 0]], [[0, 1, 5, 4], [0, -1, 0]],
+    [[4, 5, 7, 6], [0, 0, 1]], [[0, 2, 3, 1], [0, 0, -1]]
+  ];
+  function shadeSet(col) {
+    return FACES.map((F) => {
+      const lit = AMB + DIF * Math.max(0, F[1][0] * LIGHT[0] + F[1][1] * LIGHT[1] + F[1][2] * LIGHT[2]);
+      return 'rgb(' + Math.min(255, col[0] * lit | 0) + ',' + Math.min(255, col[1] * lit | 0) + ',' + Math.min(255, col[2] * lit | 0) + ')';
+    });
+  }
+
+  function renderGrow(ctx, G, t, W, H, look) {
+    look = look || {};
+    const B = BACKDROPS[look.backdrop] || BACKDROPS.beige;
+    const { tau, sway, fwd } = growTime(G, t);
+    const p = easeIO(clamp((tau - T_FLAT) / T_TILT, 0, 1));
+    const basis = projBasis(p * Math.PI / 4, Math.PI / 2 - p * (Math.PI / 2 - ISO_PITCH));
+    const d = basis.d, rv = basis.r, uv = basis.u;
+    const s0 = G.s0 * W;
+    const Ox = W / 2, Oy = H / 2 + G.offIso * W * p;
+    const exx = s0 * rv[0], exy = -s0 * uv[0], eyx = s0 * rv[1], eyy = -s0 * uv[1], ezx = s0 * rv[2], ezy = -s0 * uv[2];
+    const hgt = lerp(0.03, 1, smooth(0.12, 0.85, p));
+
+    // backdrop with soft studio light
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = B.bg;
+    ctx.fillRect(0, 0, W, H);
+    const lg = ctx.createRadialGradient(W * 0.5, H * 0.3, 0, W * 0.5, H * 0.3, H * 0.78);
+    lg.addColorStop(0, B.light);
+    lg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = lg;
+    ctx.fillRect(0, 0, W, H);
+
+    // cube states
+    const cubes = G.cubes, vs = G.vs;
+    const st = G._st || (G._st = cubes.map(() => ({})));
+    let platDone = 0;
+    for (let i = 0; i < cubes.length; i++) {
+      const c = cubes[i], s = st[i];
+      if (tau <= c.dep) {
+        s.x = c.ax; s.y = hgt / 2; s.z = c.az; s.hx = 0.5; s.hy = hgt / 2; s.hz = 0.5; s.col = c.colA; s.sh = c.shA; s.rot = 0; s.fly = 0;
+      } else {
+        const u = clamp((tau - c.dep) / c.dur, 0, 1);
+        if (u >= 1) {
+          let y = c.ty;
+          if (sway && c.g === 'canopy') y += Math.sin(t * 2.2 + c.phase) * 0.07 * vs * sway;
+          s.x = c.tx; s.y = y; s.z = c.tz; s.hx = s.hy = s.hz = vs / 2; s.rot = 0; s.fly = 0;
+          const since = fwd >= 0 ? fwd - c.dep - c.dur : 9;
+          if (since >= 0 && since < 0.7) { s.col = mixRgb(c.colB, GLOW, 0.38 * Math.exp(-since * 6)); s.sh = null; }
+          else { s.col = c.colB; s.sh = c.shB; }
+          if (c.g === 'plat') platDone++;
+        } else {
+          const e = easeIO(u), ie = 1 - e;
+          const b0 = ie * ie * ie, b1 = 3 * ie * ie * e, b2 = 3 * ie * e * e, b3 = e * e * e;
+          const y0 = hgt / 2;
+          s.x = (b0 + b1) * c.ax + (b2 + b3) * c.tx;
+          s.y = b0 * y0 + b1 * (y0 + c.l1) + b2 * (c.ty + c.l2) + b3 * c.ty;
+          s.z = (b0 + b1) * c.az + (b2 + b3) * c.tz;
+          const sz = lerp(1, vs, smooth(0.08, 0.92, u)) * (1 + 0.1 * Math.sin(Math.PI * smooth(0.82, 1, u)));
+          s.hx = s.hz = sz / 2; s.hy = lerp(hgt, sz, smooth(0, 0.2, u)) / 2;
+          s.col = mixRgb(c.colA, c.colB, smooth(0.05, 0.6, u)); s.sh = null;
+          s.rot = c.turns * (Math.PI / 2) * easeIO(smooth(0.06, 0.94, u)); s.axis = c.axis; s.fly = u;
+        }
+      }
+      s.depth = s.x * d[0] + s.y * d[1] + s.z * d[2];
+      s.hidden = c.hidden && tau >= c.dep + c.dur;
+    }
+
+    const proj = (x, y, z) => [Ox + x * exx + y * eyx + z * ezx, Oy + x * exy + y * eyy + z * ezy];
+    // ground contact shadow under the platform
+    if (G.platCount && platDone) {
+      const a = 0.28 * (platDone / G.platCount);
+      const ext = (G.tree.h + 0.5) * vs * 1.35;
+      const cpt = proj(0, 0, 0), ex1 = proj(ext, 0, -ext), ex2 = proj(ext, 0, ext);
+      const rx = Math.abs(ex1[0] - cpt[0]), ry = Math.max(1, Math.abs(ex2[1] - cpt[1]));
+      ctx.save();
+      ctx.translate(cpt[0], cpt[1] + ry * 0.12);
+      ctx.scale(1, ry / rx);
+      const sg = ctx.createRadialGradient(0, 0, rx * 0.3, 0, 0, rx);
+      sg.addColorStop(0, 'rgba(' + B.shadow + ',' + a + ')');
+      sg.addColorStop(1, 'rgba(' + B.shadow + ',0)');
+      ctx.fillStyle = sg;
+      ctx.beginPath(); ctx.arc(0, 0, rx, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    // flying cube shadows
+    ctx.fillStyle = 'rgb(' + B.shadow + ')';
+    for (let i = 0; i < cubes.length; i++) {
+      const s = st[i];
+      if (!s.fly) continue;
+      const fade = Math.min(1, s.fly * 5, (1 - s.fly) * 5);
+      const a = 0.16 * fade * (1 - smooth(0, 40, s.y));
+      if (a < 0.01) continue;
+      const k = s.hx * (1 + s.y * 0.02);
+      const p1 = proj(s.x - k, 0, s.z - k), p2 = proj(s.x + k, 0, s.z - k), p3 = proj(s.x + k, 0, s.z + k), p4 = proj(s.x - k, 0, s.z + k);
+      ctx.globalAlpha = a;
+      ctx.beginPath(); ctx.moveTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]); ctx.lineTo(p3[0], p3[1]); ctx.lineTo(p4[0], p4[1]); ctx.closePath(); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // painter's order
+    const order = G._ord || (G._ord = new Int32Array(cubes.length));
+    for (let i = 0; i < cubes.length; i++) order[i] = i;
+    const ordArr = Array.prototype.slice.call(order).sort((a, b) => st[a].depth - st[b].depth);
+
+    // faces are grown by E px so neighbouring faces overlap and leave no hairline seams
+    const E = Math.max(0.45, W / 2000);
+    const corners = new Float64Array(16);
+    for (let oi = 0; oi < ordArr.length; oi++) {
+      const s = st[ordArr[oi]];
+      if (s.hidden) continue;
+      const col = s.col;
+      let ca = 1, sa = 0;
+      if (s.rot) { ca = Math.cos(s.rot); sa = Math.sin(s.rot); }
+      for (let ci = 0; ci < 8; ci++) {
+        let vx = ci & 1 ? s.hx : -s.hx, vy = ci & 2 ? s.hy : -s.hy, vz = ci & 4 ? s.hz : -s.hz;
+        if (s.rot) {
+          if (s.axis === 0) { const y2 = vy * ca - vz * sa, z2 = vy * sa + vz * ca; vy = y2; vz = z2; }
+          else if (s.axis === 1) { const x2 = vx * ca + vz * sa, z2 = -vx * sa + vz * ca; vx = x2; vz = z2; }
+          else { const x2 = vx * ca - vy * sa, y2 = vx * sa + vy * ca; vx = x2; vy = y2; }
+        }
+        const px = s.x + vx, py = s.y + vy, pz = s.z + vz;
+        corners[ci * 2] = Ox + px * exx + py * eyx + pz * ezx;
+        corners[ci * 2 + 1] = Oy + px * exy + py * eyy + pz * ezy;
+      }
+      for (let fi = 0; fi < 6; fi++) {
+        const F = FACES[fi];
+        let nx = F[1][0], ny = F[1][1], nz = F[1][2];
+        if (s.rot) {
+          if (s.axis === 0) { const y2 = ny * ca - nz * sa, z2 = ny * sa + nz * ca; ny = y2; nz = z2; }
+          else if (s.axis === 1) { const x2 = nx * ca + nz * sa, z2 = -nx * sa + nz * ca; nx = x2; nz = z2; }
+          else { const x2 = nx * ca - ny * sa, y2 = nx * sa + ny * ca; nx = x2; ny = y2; }
+        }
+        if (nx * d[0] + ny * d[1] + nz * d[2] <= 0.002) continue;
+        let css;
+        if (s.sh && !s.rot) css = s.sh[fi];
+        else {
+          const lit = AMB + DIF * Math.max(0, nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2]);
+          css = 'rgb(' + Math.min(255, col[0] * lit | 0) + ',' + Math.min(255, col[1] * lit | 0) + ',' + Math.min(255, col[2] * lit | 0) + ')';
+        }
+        const q = F[0];
+        const x0 = corners[q[0] * 2], y0 = corners[q[0] * 2 + 1], x1 = corners[q[1] * 2], y1 = corners[q[1] * 2 + 1];
+        const x2 = corners[q[2] * 2], y2 = corners[q[2] * 2 + 1], x3 = corners[q[3] * 2], y3 = corners[q[3] * 2 + 1];
+        const mx = (x0 + x1 + x2 + x3) / 4, my = (y0 + y1 + y2 + y3) / 4;
+        ctx.beginPath();
+        let dx = x0 - mx, dy = y0 - my, L = Math.sqrt(dx * dx + dy * dy) || 1, k = (L + E) / L;
+        ctx.moveTo(mx + dx * k, my + dy * k);
+        dx = x1 - mx; dy = y1 - my; L = Math.sqrt(dx * dx + dy * dy) || 1; k = (L + E) / L;
+        ctx.lineTo(mx + dx * k, my + dy * k);
+        dx = x2 - mx; dy = y2 - my; L = Math.sqrt(dx * dx + dy * dy) || 1; k = (L + E) / L;
+        ctx.lineTo(mx + dx * k, my + dy * k);
+        dx = x3 - mx; dy = y3 - my; L = Math.sqrt(dx * dx + dy * dy) || 1; k = (L + E) / L;
+        ctx.lineTo(mx + dx * k, my + dy * k);
+        ctx.closePath();
+        ctx.fillStyle = css;
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+    return { tau, p };
+  }
+
+  root.BloomEngine = {
+    clamp, lerp, hexToRgb, rgbToHex, mixRgb, relLum, contrast, isHex,
+    buildPayload, makeMatrix, buildScene, sceneToSVG, drawScene, scanScene, paintAt, paintFor,
+    MODULE_STYLES, EYE_FRAMES, EYE_BALLS, ICONS, SEASONS, BACKDROPS, FONT_STACK,
+    buildGrow, setSeason, setQrColors, renderGrow, growTime, utf8,
+    _: { rrect, rrectHole, circle, eyeFramePath, eyeBallPath, modulePath, alignmentCenters }
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+(function () {
+  'use strict';
+  const E = window.BloomEngine;
+  const $ = (s, el) => (el || document).querySelector(s);
+  const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
+  const reduceMotion = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const STORE_KEY = 'bloom-qr.v1';
+  const EXAMPLE_URL = 'https://en.wikipedia.org/wiki/QR_code';
+  const RUL = 24;
+
+  const PRESETS = [
+    { id: 'moss', name: 'Moss', module: 'liquid', eyeFrame: 'rounded', eyeBall: 'drop', fill: { mode: 'linear', c1: '#1e5a41', c2: '#2f7a2c', angle: 135 }, bg: '#f3f5ec' },
+    { id: 'ink', name: 'Ink', module: 'square', eyeFrame: 'square', eyeBall: 'square', fill: { mode: 'solid', c1: '#111613', c2: '#111613', angle: 0 }, bg: '#ffffff' },
+    { id: 'ember', name: 'Ember', module: 'liquid', eyeFrame: 'drop', eyeBall: 'drop', fill: { mode: 'linear', c1: '#c2410c', c2: '#9f1239', angle: 135 }, bg: '#fff7f2' },
+    { id: 'lagoon', name: 'Lagoon', module: 'dots', eyeFrame: 'rounded', eyeBall: 'circle', fill: { mode: 'radial', c1: '#0b3c7a', c2: '#0e7490', angle: 0 }, bg: '#ffffff' },
+    { id: 'neon', name: 'Neon', module: 'soft', eyeFrame: 'petal', eyeBall: 'petal', fill: { mode: 'linear', c1: '#2ee6c2', c2: '#b98cff', angle: 45 }, bg: '#0e0b1d' },
+    { id: 'gilded', name: 'Gilded', module: 'leaf', eyeFrame: 'petal', eyeBall: 'drop', fill: { mode: 'linear', c1: '#b7892c', c2: '#e8c66e', angle: 90 }, bg: '#151310' },
+    { id: 'candy', name: 'Candy', module: 'bars', eyeFrame: 'rounded', eyeBall: 'circle', fill: { mode: 'linear', c1: '#be185d', c2: '#c2410c', angle: 90 }, bg: '#fff5f8' },
+    { id: 'blueprint', name: 'Blueprint', module: 'columns', eyeFrame: 'square', eyeBall: 'square', fill: { mode: 'solid', c1: '#f3f7ff', c2: '#f3f7ff', angle: 0 }, bg: '#1d4ed8' }
+  ];
+  const MODULE_NAMES = { square: 'Classic', liquid: 'Liquid', dots: 'Dots', soft: 'Soft', leaf: 'Leaf', bars: 'Bars', columns: 'Columns', mosaic: 'Mosaic' };
+  const FRAME_NAMES = { square: 'Square', rounded: 'Round', drop: 'Drop', petal: 'Petal', dotted: 'Dotted' };
+  const BALL_NAMES = { square: 'Square', rounded: 'Round', circle: 'Circle', drop: 'Drop', petal: 'Petal' };
+  const ICON_NAMES = { link: 'Link', globe: 'Globe', wifi: 'Wi-Fi', mail: 'Mail', chat: 'Chat', heart: 'Heart', star: 'Star', sprout: 'Sprout' };
+  const SEASON_NAMES = { spring: 'Spring', summer: 'Summer', autumn: 'Autumn', sakura: 'Sakura', winter: 'Winter' };
+  const BACKDROP_NAMES = { beige: 'Beige', sage: 'Sage', sky: 'Sky', night: 'Night' };
+
+  function defaults() {
+    const p = PRESETS[0];
+    return {
+      mode: 'design',
+      content: {
+        type: 'url', url: EXAMPLE_URL, text: '',
+        wifi: { ssid: '', pass: '', enc: 'WPA', hidden: false },
+        contact: { first: '', last: '', phone: '', email: '', org: '', title: '', url: '' },
+        email: { to: '', subject: '', body: '' },
+        phone: { number: '', mode: 'call', message: '' }
+      },
+      preset: p.id, module: p.module, eyeFrame: p.eyeFrame, eyeBall: p.eyeBall,
+      fill: Object.assign({}, p.fill),
+      eyes: { custom: false, frame: '#1e5a41', ball: '#d99a1c' },
+      bg: { color: p.bg, transparent: false, radius: 2 },
+      center: { type: 'none', text: '', icon: 'sprout', size: 0.24, shape: 'circle', plate: true, img: '' },
+      label: { style: 'none', text: 'Scan me' },
+      margin: 4, ecl: 'auto', pngSize: 1024,
+      grow: { season: 'spring', backdrop: 'beige' }
+    };
+  }
+  function deepMerge(base, over) {
+    if (!over || typeof over !== 'object') return base;
+    for (const k of Object.keys(base)) {
+      if (!(k in over)) continue;
+      const b = base[k], o = over[k];
+      if (b && typeof b === 'object') deepMerge(b, o);
+      else if (typeof o === typeof b) base[k] = o;
+    }
+    return base;
+  }
+  const store = {
+    get() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { return null; } },
+    set(v) { try { localStorage.setItem(STORE_KEY, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+  };
+
+  const S = deepMerge(defaults(), store.get());
+  (function validate() {
+    const D = defaults();
+    const oneOf = (v, list, d) => (list.indexOf(v) >= 0 ? v : d);
+    S.module = oneOf(S.module, E.MODULE_STYLES, D.module);
+    S.eyeFrame = oneOf(S.eyeFrame, E.EYE_FRAMES, D.eyeFrame);
+    S.eyeBall = oneOf(S.eyeBall, E.EYE_BALLS, D.eyeBall);
+    S.fill.mode = oneOf(S.fill.mode, ['solid', 'linear', 'radial'], D.fill.mode);
+    for (const k of ['c1', 'c2']) if (!E.isHex(S.fill[k])) S.fill[k] = D.fill[k];
+    for (const k of ['frame', 'ball']) if (!E.isHex(S.eyes[k])) S.eyes[k] = D.eyes[k];
+    if (!E.isHex(S.bg.color)) S.bg.color = D.bg.color;
+    S.ecl = oneOf(S.ecl, ['auto', 'L', 'M', 'Q', 'H'], 'auto');
+    S.content.type = oneOf(S.content.type, ['url', 'text', 'wifi', 'contact', 'email', 'phone'], 'url');
+    S.center.type = oneOf(S.center.type, ['none', 'text', 'icon', 'image'], 'none');
+    S.center.icon = oneOf(S.center.icon, Object.keys(E.ICONS), 'sprout');
+    S.label.style = oneOf(S.label.style, ['none', 'text', 'pill'], 'none');
+    S.grow.season = oneOf(S.grow.season, Object.keys(E.SEASONS), 'spring');
+    S.grow.backdrop = oneOf(S.grow.backdrop, Object.keys(E.BACKDROPS), 'beige');
+    S.margin = Math.max(0, Math.min(8, Math.round(S.margin)));
+    S.center.size = Math.max(0.16, Math.min(0.3, S.center.size));
+    S.pngSize = [512, 1024, 2048, 4096].indexOf(S.pngSize) >= 0 ? S.pngSize : 1024;
+    const h = (location.hash || '').slice(1);
+    S.mode = h === 'grow' ? 'grow' : 'design';
+  })();
+
+  // ---------- downloads (viewer capability, with a plain-browser fallback) ----------
+  const dlReady = (window.claude && typeof window.claude.use === 'function')
+    ? Promise.resolve(window.claude.use('downloads')).catch(() => null)
+    : Promise.resolve('anchor');
+  async function saveFile(name, data) {
+    const ns = await dlReady;
+    if (ns === 'anchor') {
+      const blob = data instanceof Blob ? data : new Blob([data]);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      return true;
+    }
+    if (!ns) { toast('Saving files isn’t available in this view. Use Copy SVG instead.'); return false; }
+    try {
+      const r = await ns.save({ filename: name, data });
+      if (r && r.status === 'saved') toast('Saved ' + name);
+      return true;
+    } catch (e) {
+      const code = e && e.code;
+      if (code === 'declined') toast('Save cancelled');
+      else if (code === 'rate_limited') toast('Another save is waiting for your answer');
+      else if (code === 'too_large') toast('That file is too large to save here. Try a smaller size.');
+      else toast('Couldn’t save the file here');
+      return false;
+    }
+  }
+  dlReady.then((ns) => {
+    if (!ns) for (const id of ['bPng', 'bSvg', 'bSaveVideo', 'bFrame', 'bVideo']) { const b = $('#' + id); if (b) { b.disabled = true; b.title = 'Saving files isn’t available in this view'; } }
+  });
+
+  // ---------- helpers ----------
+  const mkCanvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+  const measureCtx = mkCanvas(8, 8).getContext('2d');
+  function measureLabel(t, fs) { measureCtx.font = '700 100px ' + E.FONT_STACK; return (measureCtx.measureText(t).width / 100) * fs; }
+  const escAttr = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  function normHex(v) {
+    let h = String(v || '').trim().replace(/^#/, '');
+    if (/^[0-9a-f]{3}$/i.test(h)) h = h.split('').map((c) => c + c).join('');
+    return /^[0-9a-f]{6}$/i.test(h) ? '#' + h.toLowerCase() : null;
+  }
+  function slug(s) {
+    return String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+  }
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+  const readPath = (p) => p.split('.').reduce((o, k) => (o == null ? o : o[k]), S);
+  function writePath(p, v) { const ks = p.split('.'); let o = S; for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]]; o[ks[ks.length - 1]] = v; }
+
+  // ---------- encode + scene ----------
+  let mx = null, scene = null, payload = '', status = 'empty', sampleMx = null;
+  let logoImg = null, logoName = '';
+  function centerOn() {
+    const c = S.center;
+    if (c.type === 'none') return false;
+    if (c.type === 'image') return !!logoImg;
+    if (c.type === 'text') return !!c.text.trim();
+    return true;
+  }
+  function designFor(st, over) {
+    return Object.assign({
+      margin: st.margin, module: st.module, eyeFrame: st.eyeFrame, eyeBall: st.eyeBall,
+      fill: st.fill, eyes: st.eyes, bg: st.bg,
+      center: { type: st.center.type, text: st.center.text, icon: st.center.icon, size: st.center.size, shape: st.center.shape, plate: st.center.plate, img: logoImg },
+      label: st.label
+    }, over || {});
+  }
+  function encodeAll() {
+    payload = E.buildPayload(S.content);
+    mx = null; scene = null;
+    if (!window.qrcode) { status = 'lib'; return; }
+    if (!payload) { status = 'empty'; return; }
+    const levels = S.ecl === 'auto' ? (centerOn() ? ['H', 'Q', 'M', 'L'] : ['M', 'L']) : [S.ecl];
+    for (const lv of levels) { try { mx = E.makeMatrix(payload, lv); break; } catch (e) { /* next level */ } }
+    if (!mx) { status = 'overflow'; return; }
+    status = 'ok';
+    scene = E.buildScene(mx, designFor(S), measureLabel);
+  }
+
+  // ---------- stage ----------
+  function ariaLabel() {
+    const short = payload.length > 60 ? payload.slice(0, 57) + '…' : payload;
+    return 'QR code for ' + short.replace(/\s+/g, ' ');
+  }
+  function renderStage() {
+    const card = $('#card'), empty = $('#empty');
+    const design = S.mode === 'design';
+    if (!scene) {
+      card.hidden = true; empty.hidden = false; $('#film').hidden = true;
+      const msg = {
+        empty: ['Nothing to encode yet', 'Fill in the fields on the left to make a code.'],
+        overflow: ['Too much data for one code', 'Shorten the content or choose a lower error correction level. A QR code holds about 2,900 bytes at most.'],
+        lib: ['The QR encoder didn’t load', 'Check your connection and reload the page.']
+      }[status] || ['Nothing to encode yet', ''];
+      $('#emptyTitle').textContent = msg[0]; $('#emptyText').textContent = msg[1];
+    } else if (design) {
+      empty.hidden = true; $('#film').hidden = true; card.hidden = false;
+      card.innerHTML = E.sceneToSVG(scene, { id: 'pv', attrs: ' role="img" aria-label="' + escAttr(ariaLabel()) + '"' });
+      card.classList.toggle('checker', !!S.bg.transparent);
+    } else {
+      empty.hidden = true; card.hidden = true; $('#film').hidden = false;
+    }
+    $('#scan').hidden = !design || !scene;
+    layout();
+  }
+  function layout() {
+    const mat = $('#mat');
+    const W = mat.clientWidth, H = mat.clientHeight;
+    if (!W || !H) return;
+    if (S.mode === 'grow' && scene) { layoutFilm(W, H); drawGrid(W, H, null); return; }
+    if (!scene || S.mode !== 'design') { drawGrid(W, H, null); return; }
+    const top0 = RUL + 48, bottom0 = 36, side = 18;
+    const availW = W - RUL - side * 2, availH = H - top0 - bottom0;
+    let pitch = Math.min(availW / scene.W, availH / scene.H, 620 / scene.W);
+    if (pitch >= 3) pitch = Math.floor(pitch * 4) / 4;
+    const cw = pitch * scene.W, ch = pitch * scene.H;
+    const left = Math.round(RUL + (W - RUL - cw) / 2);
+    const top = Math.round(top0 + (availH - ch) / 2);
+    const card = $('#card');
+    card.style.left = left + 'px'; card.style.top = top + 'px'; card.style.width = cw + 'px'; card.style.height = ch + 'px';
+    card.style.borderRadius = S.bg.transparent ? '0' : Math.min(S.bg.radius, scene.W / 2) * pitch + 'px';
+    const laser = $('#laser');
+    laser.style.left = left + 'px'; laser.style.width = cw + 'px';
+    laser.style.top = Math.round(top + scene.q * pitch * 0.5) + 'px';
+    laser.style.setProperty('--sweep', Math.round((scene.n + scene.q) * pitch) + 'px');
+    drawGrid(W, H, { left, top, pitch });
+  }
+  function drawGrid(W, H, g) {
+    const svg = $('#matGrid');
+    const out = [];
+    let p, ox, oy, n = 0, q = 0;
+    if (g) { p = g.pitch; ox = g.left + scene.q * p; oy = g.top + scene.q * p; n = scene.n; q = scene.q; }
+    else { p = 24; ox = W / 2; oy = H / 2; }
+    const minorStep = p < 6 ? 5 : 1;
+    const y0 = g ? RUL : 0, x0 = g ? RUL : 0;
+    const m = Math.min(W, H) * 0.5;
+    out.push('<line class="diag" x1="' + (W - m) + '" y1="' + H + '" x2="' + W + '" y2="' + (H - m) + '"/>');
+    out.push('<line class="diag" x1="' + (W - m * 1.6) + '" y1="' + H + '" x2="' + W + '" y2="' + (H - m * 1.6) + '"/>');
+    for (let k = Math.ceil((x0 - ox) / p); ox + k * p <= W; k++) {
+      const major = k % 5 === 0;
+      if (!major && k % minorStep) continue;
+      const x = Math.round(ox + k * p) + 0.5;
+      out.push('<line class="' + (major ? 'mj' : 'mn') + '" x1="' + x + '" y1="' + y0 + '" x2="' + x + '" y2="' + H + '"/>');
+    }
+    for (let k = Math.ceil((y0 - oy) / p); oy + k * p <= H; k++) {
+      const major = k % 5 === 0;
+      if (!major && k % minorStep) continue;
+      const y = Math.round(oy + k * p) + 0.5;
+      out.push('<line class="' + (major ? 'mj' : 'mn') + '" x1="' + x0 + '" y1="' + y + '" x2="' + W + '" y2="' + y + '"/>');
+    }
+    if (g) {
+      out.push('<rect class="band" x="0" y="0" width="' + W + '" height="' + RUL + '"/>');
+      out.push('<rect class="band" x="0" y="' + RUL + '" width="' + RUL + '" height="' + (H - RUL) + '"/>');
+      if (q > 0) {
+        const a = ox - q * p, b = ox + n * p, c = oy - q * p, d = oy + n * p;
+        out.push('<rect class="qz" x="' + a + '" y="' + (RUL - 3) + '" width="' + q * p + '" height="3"/>');
+        out.push('<rect class="qz" x="' + b + '" y="' + (RUL - 3) + '" width="' + q * p + '" height="3"/>');
+        out.push('<rect class="qz" x="' + (RUL - 3) + '" y="' + c + '" width="3" height="' + q * p + '"/>');
+        out.push('<rect class="qz" x="' + (RUL - 3) + '" y="' + d + '" width="3" height="' + q * p + '"/>');
+      }
+      const step = p * 5 >= 24 ? 5 : p * 10 >= 24 ? 10 : 20;
+      for (let k = 0; k <= n; k++) {
+        const major = k % 5 === 0 || k === n;
+        if (!major && p < 4) continue;
+        const x = Math.round(ox + k * p) + 0.5, y = Math.round(oy + k * p) + 0.5;
+        const len = major ? 8 : 4;
+        out.push('<line class="tick" x1="' + x + '" y1="' + (RUL - len - 3) + '" x2="' + x + '" y2="' + (RUL - 3) + '"/>');
+        out.push('<line class="tick" x1="' + (RUL - len - 3) + '" y1="' + y + '" x2="' + (RUL - 3) + '" y2="' + y + '"/>');
+        const labelled = k === n || (k % step === 0 && !(k < n && n - k < step * 0.5));
+        if (labelled) {
+          out.push('<text x="' + (x + 2.5) + '" y="10">' + k + '</text>');
+          out.push('<text x="2.5" y="' + (y - 3) + '">' + k + '</text>');
+        }
+      }
+    }
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.innerHTML = out.join('');
+  }
+
+  // ---------- scan check ----------
+  let scanTimer = 0, scanSeq = 0, lastScan = null;
+  function scheduleScan() {
+    clearTimeout(scanTimer);
+    lastScan = null;
+    if (!scene) return;
+    setScan('checking');
+    const seq = ++scanSeq;
+    scanTimer = setTimeout(() => runScan(seq), 320);
+  }
+  function runScan(seq) {
+    if (seq !== scanSeq || !scene) return;
+    if (!window.jsQR) { setScan('nolib'); return; }
+    let res;
+    try { res = E.scanScene(scene, mx.bytes, mkCanvas); } catch (e) { setScan('nolib'); return; }
+    if (seq !== scanSeq) return;
+    lastScan = res;
+    setScan(res.level, res.passes);
+    if (!reduceMotion && S.mode === 'design') {
+      const l = $('#laser');
+      l.classList.remove('run'); void l.offsetWidth; l.classList.add('run');
+    }
+    updateSpec();
+  }
+  function setScan(level, passes) {
+    const el = $('#scan');
+    el.dataset.level = level;
+    const text = {
+      checking: 'Checking…',
+      strong: 'Scans · 3 of 3 checks',
+      ok: 'Scans · ' + passes + ' of 3 checks',
+      fail: 'Didn’t scan · 0 of 3 checks',
+      nolib: 'Scan check unavailable'
+    }[level] || '';
+    $('#scanText').textContent = text;
+    updateSpec();
+  }
+  function updateSpec() {
+    const sp = $('#spec');
+    if (S.mode === 'grow') { sp.textContent = G ? '1080×1920 · 60 fps · ' + G.cycle.toFixed(1) + ' s loop' : ''; return; }
+    if (!mx) { sp.textContent = ''; return; }
+    if (lastScan && lastScan.level === 'fail') { sp.textContent = 'Try more contrast, a smaller center or Classic modules'; return; }
+    sp.textContent = 'v' + mx.version + ' · ' + mx.n + '×' + mx.n + ' modules · EC ' + mx.ecl + ' · ' + mx.bytes.length + ' bytes';
+  }
+
+  // ---------- tiles ----------
+  let tileSeq = 0;
+  function sampleMatrix() { return sampleMx || (sampleMx = E.makeMatrix('https://bloom.qr/s', 'M')); }
+  function tileSvg(st, over, box) {
+    const d = designFor(st, Object.assign({ margin: 2, center: { type: 'none' }, label: { style: 'none' }, bg: { color: st.bg.transparent ? '#ffffff' : st.bg.color, transparent: false, radius: 0 } }, over));
+    const sc = E.buildScene(sampleMatrix(), d);
+    return E.sceneToSVG(sc, { id: 'tl' + (tileSeq++).toString(36), viewBox: box(sc), attrs: ' aria-hidden="true"' });
+  }
+  function buildTiles() {
+    const mk = (attr, val, name) => '<button class="tile" type="button" ' + attr + '="' + val + '" aria-pressed="false"><span class="ic"></span><span class="nm">' + name + '</span></button>';
+    $('#moduleTiles').innerHTML = E.MODULE_STYLES.map((m) => mk('data-set="module" data-val', m, MODULE_NAMES[m])).join('');
+    $('#frameTiles').innerHTML = E.EYE_FRAMES.map((m) => mk('data-set="eyeFrame" data-val', m, FRAME_NAMES[m])).join('');
+    $('#ballTiles').innerHTML = E.EYE_BALLS.map((m) => mk('data-set="eyeBall" data-val', m, BALL_NAMES[m])).join('');
+    $('#presetTiles').innerHTML = PRESETS.map((p) => mk('data-preset', p.id, p.name)).join('');
+    $('#iconTiles').innerHTML = Object.keys(E.ICONS).map((k) => {
+      const ic = E.ICONS[k];
+      const attrs = ic.mode === 'fill' ? 'fill="currentColor"' : 'fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"';
+      return '<button class="icon-btn" type="button" data-icon="' + k + '" aria-pressed="false" aria-label="' + ICON_NAMES[k] + '" title="' + ICON_NAMES[k] + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + ic.d + '" ' + attrs + '/></svg></button>';
+    }).join('');
+    $('#seasonPick').innerHTML = Object.keys(E.SEASONS).map((k) => {
+      const L = E.SEASONS[k].leaf;
+      return '<button class="swatch-btn" type="button" data-season="' + k + '" aria-pressed="false"><i style="background:linear-gradient(135deg,' + L[0] + ' 0 50%,' + L[L.length - 1] + ' 50% 100%)"></i>' + SEASON_NAMES[k] + '</button>';
+    }).join('');
+    $('#backdropPick').innerHTML = Object.keys(E.BACKDROPS).map((k) => '<button class="swatch-btn" type="button" data-backdrop="' + k + '" aria-pressed="false"><i style="background:' + E.BACKDROPS[k].bg + '"></i>' + BACKDROP_NAMES[k] + '</button>').join('');
+  }
+  function renderTiles() {
+    tileSeq = 0;
+    const dataBox = (sc) => [sc.q + 9, sc.q + 9, 7, 7];
+    const eyeBox = (sc) => [sc.q - 0.6, sc.q - 0.6, 8.2, 8.2];
+    for (const b of $$('#moduleTiles .tile')) b.firstChild.innerHTML = tileSvg(S, { module: b.dataset.val }, dataBox);
+    for (const b of $$('#frameTiles .tile')) b.firstChild.innerHTML = tileSvg(S, { eyeFrame: b.dataset.val }, eyeBox);
+    for (const b of $$('#ballTiles .tile')) b.firstChild.innerHTML = tileSvg(S, { eyeBall: b.dataset.val }, eyeBox);
+    for (const b of $$('#presetTiles .tile')) {
+      const p = PRESETS.find((x) => x.id === b.dataset.preset);
+      const st = { module: p.module, eyeFrame: p.eyeFrame, eyeBall: p.eyeBall, fill: p.fill, eyes: { custom: false }, bg: { color: p.bg, transparent: false, radius: 0 }, center: { type: 'none' }, label: { style: 'none' }, margin: 2 };
+      b.firstChild.innerHTML = tileSvg(st, {}, (sc) => [sc.q - 1, sc.q - 1, 12, 12]);
+    }
+  }
+  function syncPressed() {
+    const set = (sel, fn) => { for (const b of $$(sel)) b.setAttribute('aria-pressed', String(!!fn(b))); };
+    set('#moduleTiles .tile', (b) => b.dataset.val === S.module);
+    set('#frameTiles .tile', (b) => b.dataset.val === S.eyeFrame);
+    set('#ballTiles .tile', (b) => b.dataset.val === S.eyeBall);
+    set('#presetTiles .tile', (b) => b.dataset.preset === S.preset);
+    set('#iconTiles .icon-btn', (b) => b.dataset.icon === S.center.icon);
+    set('#seasonPick .swatch-btn', (b) => b.dataset.season === S.grow.season);
+    set('#backdropPick .swatch-btn', (b) => b.dataset.backdrop === S.grow.backdrop);
+  }
+
+  // ---------- controls ----------
+  function syncUI() {
+    for (const el of $$('[data-bind]')) {
+      const v = readPath(el.dataset.bind);
+      if (el.type === 'checkbox') el.checked = !!v;
+      else if (el.type === 'radio') el.checked = el.value === String(v);
+      else if (el.value !== String(v)) el.value = v == null ? '' : String(v);
+    }
+    for (const hx of $$('[data-hex]')) { const c = $('#' + hx.dataset.hex); if (document.activeElement !== hx) hx.value = c.value.toUpperCase(); }
+    updateVisibility();
+    syncPressed();
+  }
+  function updateVisibility() {
+    for (const g of $$('[data-ctype]')) g.hidden = g.dataset.ctype !== S.content.type;
+    $('#smsField').hidden = S.content.phone.mode !== 'sms';
+    $('#c2Field').hidden = S.fill.mode === 'solid';
+    $('#angleRow').hidden = S.fill.mode !== 'linear';
+    $('#l-c1').textContent = S.fill.mode === 'solid' ? 'Color' : 'Start color';
+    $('#l-c2').textContent = 'End color';
+    $('#eyeColors').hidden = !S.eyes.custom;
+    $('#bSwap').hidden = S.fill.mode !== 'solid' || S.bg.transparent;
+    for (const g of $$('[data-center]')) g.hidden = g.dataset.center !== S.center.type;
+    $('#shapeRow').hidden = !(S.center.type === 'text' || S.center.type === 'icon');
+    $('#sizeRow').hidden = S.center.type === 'none';
+    $('#labelField').hidden = S.label.style === 'none';
+    const grow = S.mode === 'grow';
+    for (const s of $$('[data-for]')) s.hidden = s.dataset.for !== S.mode;
+    $('#xDesign').hidden = grow; $('#xGrow').hidden = !grow;
+    $('#mat').classList.toggle('grow', grow);
+    for (const t of $$('[role="tab"][data-mode]')) t.setAttribute('aria-selected', String(t.dataset.mode === S.mode));
+  }
+  const STYLE_PATH = /^(fill|eyes|bg|module|eyeFrame|eyeBall)\b/;
+  function afterChange(path) {
+    if (STYLE_PATH.test(path)) { S.preset = null; tilesDirty = true; }
+    if (path === 'bg.transparent') tilesDirty = true;
+    if (/^(content\.type|center\.type|fill\.mode|eyes\.custom|label\.style|content\.phone\.mode|bg\.transparent)$/.test(path)) updateVisibility();
+    syncPressed();
+    invalidate();
+  }
+  function onBind(e) {
+    const el = e.target;
+    if (el.dataset && el.dataset.hex) {
+      const v = normHex(el.value);
+      if (!v) return;
+      const color = $('#' + el.dataset.hex);
+      if (readPath(color.dataset.bind) === v) return;
+      color.value = v; writePath(color.dataset.bind, v); afterChange(color.dataset.bind);
+      return;
+    }
+    const path = el.dataset && el.dataset.bind;
+    if (!path) return;
+    let v;
+    if (el.type === 'checkbox') v = el.checked;
+    else if (el.type === 'radio') { if (!el.checked) return; v = el.value; }
+    else v = el.value;
+    if (el.dataset.num !== undefined) v = Number(v);
+    if (el.type === 'color') { const hx = $('[data-hex="' + el.id + '"]'); if (hx) hx.value = String(v).toUpperCase(); }
+    if (readPath(path) === v) return;
+    writePath(path, v);
+    afterChange(path);
+  }
+  document.addEventListener('input', onBind);
+  document.addEventListener('change', onBind);
+  document.addEventListener('focusout', (e) => {
+    const el = e.target;
+    if (el.dataset && el.dataset.hex) { const c = $('#' + el.dataset.hex); el.value = c.value.toUpperCase(); }
+  });
+
+  function applyPreset(id) {
+    const p = PRESETS.find((x) => x.id === id);
+    if (!p) return;
+    S.preset = id; S.module = p.module; S.eyeFrame = p.eyeFrame; S.eyeBall = p.eyeBall;
+    S.fill = Object.assign({}, p.fill);
+    S.eyes.custom = false;
+    S.bg.color = p.bg; S.bg.transparent = false;
+    tilesDirty = true;
+    syncUI();
+    invalidate();
+  }
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-set],[data-preset],[data-icon],[data-season],[data-backdrop],[role="tab"][data-mode]');
+    if (!t) return;
+    if (t.dataset.mode) { setMode(t.dataset.mode); return; }
+    if (t.dataset.preset) { applyPreset(t.dataset.preset); return; }
+    if (t.dataset.set) { S[t.dataset.set] = t.dataset.val; S.preset = null; tilesDirty = true; }
+    else if (t.dataset.icon) S.center.icon = t.dataset.icon;
+    else if (t.dataset.season) S.grow.season = t.dataset.season;
+    else if (t.dataset.backdrop) S.grow.backdrop = t.dataset.backdrop;
+    syncPressed();
+    invalidate();
+  });
+  $('.modes').addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const next = S.mode === 'design' ? 'grow' : 'design';
+    setMode(next); $('#tab-' + next).focus(); e.preventDefault();
+  });
+  $('#bSwap').addEventListener('click', () => {
+    const a = S.fill.c1; S.fill.c1 = S.bg.color; S.fill.c2 = S.bg.color; S.bg.color = a;
+    S.preset = null; tilesDirty = true; syncUI(); invalidate();
+  });
+
+  // logo upload
+  function loadLogo(file) {
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { toast('That file isn’t an image'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const w0 = img.naturalWidth || 512, h0 = img.naturalHeight || 512;
+        const k = Math.min(1, 512 / Math.max(w0, h0));
+        const cv = mkCanvas(Math.max(1, Math.round(w0 * k)), Math.max(1, Math.round(h0 * k)));
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        setLogo(cv.toDataURL('image/png'), file.name);
+      };
+      img.onerror = () => toast('Couldn’t read that image');
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  function setLogo(url, name) {
+    const img = new Image();
+    img.onload = () => {
+      logoImg = img; logoName = name || logoName;
+      S.center.img = url.length < 600000 ? url : '';
+      S.center.type = 'image';
+      $('#logoThumb').innerHTML = '<img alt="" src="' + url + '">';
+      $('#logoTitle').textContent = logoName || 'Logo';
+      $('#logoSub').textContent = 'Click or drop to replace it.';
+      syncUI(); invalidate();
+    };
+    img.src = url;
+  }
+  $('#f-logo').addEventListener('change', (e) => { loadLogo(e.target.files && e.target.files[0]); e.target.value = ''; });
+  const drop = $('#drop');
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); loadLogo(e.dataTransfer && e.dataTransfer.files[0]); });
+
+  // ---------- readouts ----------
+  function contrastInfo() {
+    if (S.bg.transparent) return { transparent: true };
+    const bg = E.hexToRgb(S.bg.color);
+    const stops = [S.fill.c1].concat(S.fill.mode === 'solid' ? [] : [S.fill.c2]).concat(S.eyes.custom ? [S.eyes.frame, S.eyes.ball] : []);
+    let min = Infinity, inverted = false;
+    for (const c of stops) { const rgb = E.hexToRgb(c); min = Math.min(min, E.contrast(rgb, bg)); if (E.relLum(rgb) > E.relLum(bg)) inverted = true; }
+    return { min, inverted };
+  }
+  function updateReadouts() {
+    $('#bytesInfo').textContent = mx ? mx.bytes.length + ' bytes · v' + mx.version : '';
+    $('#rawOut').textContent = payload || '(empty)';
+    $('#urlHint').hidden = !(S.content.type === 'url' && S.content.url === EXAMPLE_URL);
+    const p = PRESETS.find((x) => x.id === S.preset);
+    $('#presetName').textContent = p ? p.name : 'Custom';
+    $('#o-angle').textContent = S.fill.angle + '°';
+    $('#o-csize').textContent = Math.round(S.center.size * 100) + '%';
+    $('#o-margin').textContent = S.margin + ' mod';
+    $('#o-radius').textContent = String(S.bg.radius);
+    $('#qzHint').hidden = S.margin >= 2;
+    $('#eclNow').textContent = S.ecl === 'auto' ? (mx ? 'Auto · using ' + mx.ecl : 'Auto') : (mx ? 'Using ' + mx.ecl : '');
+    const ci = contrastInfo(), chip = $('#contrastChip'), hint = $('#contrastHint');
+    hint.className = 'hint';
+    if (ci.transparent) {
+      chip.className = 'chip warn'; chip.textContent = 'Transparent';
+      hint.textContent = 'Place it on a plain surface that contrasts with the code color.';
+    } else {
+      const r = ci.min.toFixed(1) + ':1';
+      if (ci.min >= 4.5) { chip.className = 'chip ok'; chip.textContent = 'Contrast ' + r; hint.textContent = 'Strong enough for print and screens.'; }
+      else if (ci.min >= 3) { chip.className = 'chip warn'; chip.textContent = 'Contrast ' + r; hint.textContent = 'Fine on screens. For print, aim for 4.5:1 or more.'; hint.className = 'hint warn'; }
+      else { chip.className = 'chip bad'; chip.textContent = 'Contrast ' + r; hint.textContent = 'Too little contrast. Darken the code or lighten the background.'; hint.className = 'hint bad'; }
+      if (ci.inverted) hint.textContent += ' Light on dark works with most phone cameras; some older scanner apps need dark on light.';
+    }
+    const ch = $('#centerHint'), info = $('#centerInfo');
+    ch.className = 'hint'; ch.hidden = true; info.textContent = '';
+    if (S.center.type === 'image' && !logoImg) { ch.hidden = false; ch.textContent = 'Choose an image to place in the middle of the code.'; }
+    else if (centerOn() && mx && scene) {
+      const cover = Math.round((scene.stats.removed / Math.max(1, scene.stats.darkTotal)) * 100);
+      info.textContent = 'Covers ' + cover + '% of dark modules';
+      ch.hidden = false;
+      if (mx.ecl === 'H') ch.textContent = 'Error correction is at H, so the covered modules can be rebuilt by the scanner.';
+      else { ch.className = 'hint warn'; ch.textContent = 'With a center badge, error correction H is safest. It’s on ' + mx.ecl + ' now.'; }
+    }
+    updateSpec();
+  }
+
+  // ---------- update loop ----------
+  let pend = 0, tilesDirty = true, saveTimer = 0, tileTimer = 0, firstFlush = true;
+  function invalidate() { if (!pend) pend = requestAnimationFrame(flush); }
+  function flush() {
+    pend = 0;
+    encodeAll();
+    renderStage();
+    if (tilesDirty) {
+      tilesDirty = false;
+      clearTimeout(tileTimer);
+      if (firstFlush) renderTiles(); else tileTimer = setTimeout(renderTiles, 140);
+    }
+    firstFlush = false;
+    updateReadouts();
+    if (S.mode === 'design') scheduleScan(); else scheduleGrow();
+    updatePeek();
+    markVideoStale();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      const copy = JSON.parse(JSON.stringify(S));
+      copy.content.wifi.pass = '';
+      if (copy.center.img && copy.center.img.length > 600000) copy.center.img = '';
+      store.set(copy);
+    }, 400);
+  }
+  function setMode(m) {
+    if (m !== 'design' && m !== 'grow') return;
+    S.mode = m;
+    try { history.replaceState(null, '', '#' + m); } catch (e) { /* ignore */ }
+    updateVisibility();
+    if (m === 'grow') { stopLoop(); renderStage(); refreshGrow(true); }
+    else { stopLoop(); renderStage(); scheduleScan(); }
+    updatePeek();
+    updateSpec();
+  }
+  window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if ((h === 'grow' || h === 'design') && h !== S.mode) setMode(h); });
+
+  // ---------- export: design ----------
+  function fileBase() {
+    const c = S.content;
+    let s = '';
+    if (c.type === 'url') { try { s = new URL(payload).hostname.replace(/^www\./, ''); } catch (e) { s = 'link'; } }
+    else if (c.type === 'wifi') s = 'wifi ' + c.wifi.ssid;
+    else if (c.type === 'contact') s = (c.contact.first + ' ' + c.contact.last).trim() || 'contact';
+    else if (c.type === 'phone') s = c.phone.mode === 'sms' ? 'sms' : 'phone';
+    else s = c.type;
+    return 'qr-' + (slug(s) || 'code');
+  }
+  function exportSvg() { return '<?xml version="1.0" encoding="UTF-8"?>\n' + E.sceneToSVG(scene, { id: 'bloom', px: 1024 }); }
+  async function fontsReady() {
+    if (!document.fonts || !document.fonts.load) return;
+    try { await Promise.race([Promise.all([document.fonts.load('800 40px "Bricolage Grotesque"'), document.fonts.load('700 40px "Bricolage Grotesque"')]), sleep(1500)]); } catch (e) { /* fall back to system fonts */ }
+  }
+  $('#bPng').addEventListener('click', async () => {
+    if (!scene) { toast('Add some content first'); return; }
+    const sc = scene;
+    await fontsReady();
+    const w = S.pngSize, cv = mkCanvas(w, Math.round((w * sc.H) / sc.W));
+    E.drawScene(cv.getContext('2d'), sc, w);
+    const blob = await new Promise((r) => cv.toBlob(r, 'image/png'));
+    if (blob) saveFile(fileBase() + '.png', blob);
+  });
+  $('#bSvg').addEventListener('click', () => { if (!scene) { toast('Add some content first'); return; } saveFile(fileBase() + '.svg', exportSvg()); });
+  $('#bCopy').addEventListener('click', () => {
+    if (!scene) { toast('Add some content first'); return; }
+    const svg = exportSvg();
+    if (!navigator.clipboard || !navigator.clipboard.writeText) { toast('Copy isn’t available here. Use Save SVG instead.'); return; }
+    navigator.clipboard.writeText(svg).then(() => toast('SVG copied'), () => toast('Copy was blocked here. Use Save SVG instead.'));
+  });
+
+  // ---------- grow ----------
+  let G = null, gKey = '', gT = 0, playing = !reduceMotion, raf = 0, lastTs = 0, growTimer = 0;
+  function qrColorFn(n) {
+    const B = E.BACKDROPS[S.grow.backdrop] || E.BACKDROPS.beige;
+    const bd = E.hexToRgb(B.bg), night = S.grow.backdrop === 'night';
+    const paint = E.paintFor(S.fill, n, S.margin);
+    const stops = (S.fill.mode === 'solid' ? [S.fill.c1] : [S.fill.c1, S.fill.c2]).map(E.hexToRgb);
+    const usable = stops.every((c) => E.contrast(c, bd) >= 3.2 && (night ? E.relLum(c) > E.relLum(bd) : E.relLum(c) < E.relLum(bd)));
+    const ink = E.hexToRgb(B.ink);
+    return (r, c) => (usable ? E.paintAt(paint, c + S.margin + 0.5, r + S.margin + 0.5) : ink);
+  }
+  function scheduleGrow() {
+    if (!mx) { G = null; gKey = ''; stopLoop(); return; }
+    const key = mx.n + '|' + payload + '|' + mx.ecl;
+    if (key === gKey && G) { refreshGrow(false); return; }
+    clearTimeout(growTimer);
+    growTimer = setTimeout(() => refreshGrow(true), 220);
+  }
+  function refreshGrow(rebuild) {
+    if (!mx) { G = null; gKey = ''; return; }
+    const key = mx.n + '|' + payload + '|' + mx.ecl;
+    const colorFn = qrColorFn(mx.n);
+    if (!G || key !== gKey) {
+      if (!rebuild && G) return;
+      G = E.buildGrow(mx, colorFn, payload);
+      gKey = key;
+      if (gT > G.cycle) gT = 0;
+      if (!playing && reduceMotion) gT = G.tA + 0.5;
+    } else E.setQrColors(G, colorFn);
+    E.setSeason(G, S.grow.season);
+    $('#scrub').max = G.cycle.toFixed(2);
+    layout();
+    drawGrow();
+    updateSpec();
+    if (playing) startLoop();
+  }
+  function drawGrow() {
+    if (!G || S.mode !== 'grow') return;
+    const cv = $('#growCv');
+    E.renderGrow(cv.getContext('2d'), G, gT, cv.width, cv.height, { backdrop: S.grow.backdrop });
+    $('#scrub').value = gT.toFixed(2);
+    $('#tOut').textContent = gT.toFixed(1) + ' / ' + G.cycle.toFixed(1) + ' s';
+  }
+  function layoutFilm(W, H) {
+    const film = $('#film'), cv = $('#growCv');
+    const pad = 20, transport = 46, below = 22;
+    let fh = H - pad * 2 - transport - 10 - below, fw = (fh * 9) / 16;
+    if (fw > W - pad * 2) { fw = W - pad * 2; fh = (fw * 16) / 9; }
+    fw = Math.max(120, Math.floor(fw)); fh = Math.round((fw * 16) / 9);
+    film.style.width = fw + 'px';
+    film.style.left = Math.round((W - fw) / 2) + 'px';
+    film.style.top = Math.round(Math.max(pad, (H - below - fh - transport - 10) / 2)) + 'px';
+    cv.style.height = fh + 'px';
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const pw = Math.round(fw * dpr), ph = Math.round(fh * dpr);
+    if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+    drawGrow();
+  }
+  function loop(ts) {
+    raf = 0;
+    if (S.mode !== 'grow' || !G || !playing || document.hidden || vBusy) { lastTs = 0; return; }
+    const dt = lastTs ? Math.min(0.1, (ts - lastTs) / 1000) : 0;
+    lastTs = ts;
+    gT = (gT + dt) % G.cycle;
+    drawGrow();
+    raf = requestAnimationFrame(loop);
+  }
+  function startLoop() { if (!raf && playing && S.mode === 'grow' && G) { lastTs = 0; raf = requestAnimationFrame(loop); } }
+  function stopLoop() { if (raf) cancelAnimationFrame(raf); raf = 0; lastTs = 0; }
+  function setPlaying(v) {
+    playing = v;
+    $('#icPause').toggleAttribute('hidden', !v); $('#icPlay').toggleAttribute('hidden', v);
+    $('#bPlay').setAttribute('aria-label', v ? 'Pause' : 'Play');
+    if (v) startLoop(); else stopLoop();
+  }
+  $('#bPlay').addEventListener('click', () => setPlaying(!playing));
+  $('#scrub').addEventListener('input', (e) => { if (!G) return; setPlaying(false); gT = Number(e.target.value); drawGrow(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) startLoop(); });
+
+  // video: frame-exact WebCodecs H.264 MP4, with a real-time recorder fallback
+  let vBusy = false, vCancel = false, vBlob = null, vExt = 'mp4', vDoneKey = '';
+  function videoKey() { return gKey + '|' + S.grow.season + '|' + S.grow.backdrop + '|' + JSON.stringify(S.fill); }
+  function uiVideo(state, frac, detail) {
+    const b = $('#bVideo'), save = $('#bSaveVideo'), cancel = $('#bCancel'), prog = $('#vProg'), text = $('#vText');
+    b.disabled = state === 'busy';
+    cancel.hidden = state !== 'busy';
+    prog.hidden = state !== 'busy';
+    if (state === 'busy') { prog.value = frac || 0; text.textContent = 'Rendering ' + Math.round((frac || 0) * 100) + '%'; }
+    else if (state === 'done') { save.hidden = false; save.textContent = 'Save ' + vExt.toUpperCase() + ' · ' + (vBlob.size / 1048576).toFixed(1) + ' MB'; text.textContent = ''; }
+    else if (state === 'cancelled') { text.textContent = 'Render cancelled'; }
+    else if (state === 'error') { text.textContent = 'Couldn’t render the video' + (detail ? ': ' + detail : ''); }
+    else if (state === 'stale') { save.hidden = true; text.textContent = 'Settings changed. Render again to update the video.'; }
+    if (state !== 'done' && state !== 'busy') save.hidden = !vBlob || state === 'stale';
+  }
+  function markVideoStale() {
+    if (vBlob && !vBusy && videoKey() !== vDoneKey) { vBlob = null; uiVideo('stale'); }
+  }
+  async function pickEncoder(w, h, fps) {
+    if (typeof VideoEncoder === 'undefined' || typeof VideoFrame === 'undefined' || !window.Mp4Muxer) return null;
+    const tries = [['avc1.640033', 'avc'], ['avc1.64002A', 'avc'], ['avc1.4D002A', 'avc'], ['avc1.42002A', 'avc'], ['vp09.00.41.08', 'vp9']];
+    for (const t of tries) {
+      const config = { codec: t[0], width: w, height: h, bitrate: 8000000, framerate: fps };
+      if (t[1] === 'avc') config.avc = { format: 'avc' };
+      try { const r = await VideoEncoder.isConfigSupported(config); if (r && r.supported) return { config, mux: t[1] }; } catch (e) { /* try next */ }
+    }
+    return null;
+  }
+  async function renderVideo() {
+    if (!G || vBusy) return;
+    const g = G, fps = 60, W = 1080, H = 1920, look = { backdrop: S.grow.backdrop };
+    vBusy = true; vCancel = false; vBlob = null; stopLoop();
+    uiVideo('busy', 0);
+    const key = videoKey();
+    try {
+      const enc = await pickEncoder(W, H, fps);
+      const blob = enc ? await encodeWebCodecs(g, enc, fps, W, H, look) : await recordRealtime(g, W, H, look);
+      vBlob = blob; vDoneKey = key;
+      uiVideo('done');
+    } catch (e) {
+      uiVideo(e && e.message === 'cancelled' ? 'cancelled' : 'error', 0, e && e.message === 'unsupported' ? 'this browser can’t encode video. Try a recent Chrome, Edge or Safari.' : '');
+    } finally {
+      vBusy = false;
+      if (playing) startLoop();
+    }
+  }
+  async function encodeWebCodecs(g, enc, fps, W, H, look) {
+    const cv = mkCanvas(W, H), ctx = cv.getContext('2d');
+    const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: enc.mux, width: W, height: H, frameRate: fps }, fastStart: 'in-memory' });
+    let failure = null;
+    const encoder = new VideoEncoder({ output: (chunk, meta) => muxer.addVideoChunk(chunk, meta), error: (err) => { failure = err; } });
+    encoder.configure(enc.config);
+    vExt = 'mp4';
+    const total = Math.round(g.cycle * fps);
+    try {
+      for (let i = 0; i < total; i++) {
+        if (vCancel) throw new Error('cancelled');
+        if (failure) throw failure;
+        E.renderGrow(ctx, g, i / fps, W, H, look);
+        const frame = new VideoFrame(cv, { timestamp: Math.round((i * 1e6) / fps), duration: Math.round(1e6 / fps) });
+        encoder.encode(frame, { keyFrame: i % (fps * 2) === 0 });
+        frame.close();
+        while (encoder.encodeQueueSize > 6) await sleep(2);
+        if (i % 4 === 0) { uiVideo('busy', i / total); await sleep(0); }
+      }
+      await encoder.flush();
+      if (failure) throw failure;
+      muxer.finalize();
+      return new Blob([muxer.target.buffer], { type: 'video/mp4' });
+    } finally {
+      try { encoder.close(); } catch (e) { /* already closed */ }
+    }
+  }
+  function recordRealtime(g, W, H, look) {
+    return new Promise((resolve, reject) => {
+      if (typeof MediaRecorder === 'undefined' || !HTMLCanvasElement.prototype.captureStream) { reject(new Error('unsupported')); return; }
+      const types = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+      const type = types.find((t) => MediaRecorder.isTypeSupported(t));
+      if (!type) { reject(new Error('unsupported')); return; }
+      vExt = type.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
+      const cv = mkCanvas(W, H), ctx = cv.getContext('2d');
+      E.renderGrow(ctx, g, 0, W, H, look);
+      const rec = new MediaRecorder(cv.captureStream(60), { mimeType: type, videoBitsPerSecond: 10000000 });
+      const chunks = [];
+      rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+      rec.onstop = () => (vCancel ? reject(new Error('cancelled')) : resolve(new Blob(chunks, { type: type.split(';')[0] })));
+      rec.start(250);
+      const t0 = performance.now();
+      const step = () => {
+        const t = (performance.now() - t0) / 1000;
+        if (vCancel || t >= g.cycle) { rec.stop(); return; }
+        E.renderGrow(ctx, g, t, W, H, look);
+        uiVideo('busy', t / g.cycle);
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
+  $('#bVideo').addEventListener('click', renderVideo);
+  $('#bCancel').addEventListener('click', () => { vCancel = true; });
+  $('#bSaveVideo').addEventListener('click', () => { if (vBlob) saveFile(fileBase() + '-grow.' + vExt, vBlob); });
+  $('#bFrame').addEventListener('click', async () => {
+    if (!G) { toast('Add some content first'); return; }
+    const cv = mkCanvas(1080, 1920);
+    E.renderGrow(cv.getContext('2d'), G, gT, 1080, 1920, { backdrop: S.grow.backdrop });
+    const blob = await new Promise((r) => cv.toBlob(r, 'image/png'));
+    if (blob) saveFile(fileBase() + '-frame.png', blob);
+  });
+
+  // ---------- phone peek ----------
+  let matVisible = true;
+  function updatePeek() {
+    const show = !matVisible && window.innerWidth < 1000 && S.mode === 'design' && !!scene;
+    const peek = $('#peek');
+    peek.hidden = !show;
+    if (show) $('#peekBtn').innerHTML = E.sceneToSVG(scene, { id: 'pk', attrs: ' aria-hidden="true"' });
+  }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((en) => { matVisible = en[0].isIntersecting; updatePeek(); }, { threshold: 0.12 }).observe($('#mat'));
+  }
+  $('#peekBtn').addEventListener('click', () => $('#mat').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' }));
+
+  // ---------- boot ----------
+  buildTiles();
+  if (S.center.img) setLogo(S.center.img, 'Saved logo');
+  syncUI();
+  setPlaying(playing);
+  if ('ResizeObserver' in window) new ResizeObserver(() => layout()).observe($('#mat'));
+  window.addEventListener('resize', updatePeek);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { tilesDirty = true; invalidate(); });
+  flush();
+  if (S.mode === 'grow') setMode('grow');
+})();
+
+</script>
+
+</body>
+</html>
